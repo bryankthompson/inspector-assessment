@@ -149,7 +149,7 @@ diff <(cat /tmp/baseline.json | jq '.security.vulnerabilities | length') \
 - ✅ Vulnerabilities detected ≥ previous version
 - ✅ No regressions in detection logic
 
-**Detailed Documentation**: See [docs/mcp_vulnerability_testbed.md](docs/mcp_vulnerability_testbed.md) for:
+**Detailed Documentation**: See [docs/TESTBED_SETUP_GUIDE.md](docs/TESTBED_SETUP_GUIDE.md) for:
 
 - Complete validation results
 - Bugs found and fixed during validation
@@ -189,10 +189,10 @@ cat /tmp/inspector-assessment-memory-mcp.json | jq '.errorHandling.metrics'
 
 ## Feature Documentation
 
-For detailed documentation on specific features, see:
+For the full documentation index (52 docs organized by category), see **[docs/README.md](docs/README.md)**.
 
-- **Reviewer Quick Start**: [docs/REVIEWER_QUICK_START.md](docs/REVIEWER_QUICK_START.md) - Fast-track guide for MCP directory reviewers (60-second screening + 5-minute detailed review)
-- **Assessment Methodology**: [docs/ASSESSMENT_METHODOLOGY.md](docs/ASSESSMENT_METHODOLOGY.md)
+Key references:
+
 - **Functionality Testing**: [README.md](README.md#2-optimized-progressive-complexity-testing) - Multi-scenario validation, progressive complexity
 - **Security Assessment**: [README.md](README.md#4-context-aware-security-assessment-with-zero-false-positives) - Domain-specific patterns, zero false positives
 - **Error Handling**: [README.md](README.md#assessment-categories) - MCP protocol compliance, validation quality
@@ -496,7 +496,7 @@ If Anthropic adopts this package, it can be migrated to `@modelcontextprotocol/i
 2. Publish to new namespace
 3. Deprecate old packages with migration notice
 
-See [PUBLISHING_GUIDE.md](PUBLISHING_GUIDE.md) for detailed publishing documentation.
+See the npm publishing section above for detailed publishing documentation.
 
 ## Upstream Sync Status
 
