@@ -20,7 +20,7 @@ import {
 import { FunctionalityAssessor } from "./modules/FunctionalityAssessor";
 import { SecurityAssessor } from "./modules/SecurityAssessor";
 import { DocumentationAssessor } from "./modules/DocumentationAssessor";
-import { ErrorHandlingAssessor } from "./modules/ErrorHandlingAssessor";
+import { ErrorHandlingAssessor } from "./modules/ErrorHandlingAssessor.deprecated";
 import { UsabilityAssessor } from "./modules/UsabilityAssessor";
 
 // Extended assessment modules
