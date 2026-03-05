@@ -9,6 +9,7 @@ import {
   AssessmentStatus,
   DEFAULT_ASSESSMENT_CONFIG,
   ManifestJsonSchema,
+  ToolAnnotationsContext,
 } from "@/lib/assessmentTypes";
 import {
   Tool,
@@ -70,6 +71,52 @@ export interface AssessmentContext {
   // Transport type for context-aware security testing
   // Used to skip irrelevant tests (e.g., path traversal on remote servers)
   transportType?: "stdio" | "http" | "sse";
+
+  // Capability-based context (populated by CLI single-module-runner)
+  resources?: Array<{
+    uri: string;
+    name?: string;
+    description?: string;
+    mimeType?: string;
+  }>;
+  resourceTemplates?: Array<{
+    uriTemplate: string;
+    name?: string;
+    description?: string;
+    mimeType?: string;
+  }>;
+  prompts?: Array<{
+    name: string;
+    description?: string;
+    arguments?: Array<{
+      name: string;
+      description?: string;
+      required?: boolean;
+    }>;
+  }>;
+  listTools?: () => Promise<Tool[]>;
+  readResource?: (uri: string) => Promise<string>;
+  getPrompt?: (name: string, args: Record<string, string>) => Promise<unknown>;
+  serverCapabilities?: Record<string, unknown>;
+
+  // Progress reporting callback (populated by CLI executor)
+  onProgress?: (event: unknown) => void;
+
+  // Transport configuration for transport-aware assessors
+  transportConfig?: unknown;
+
+  // Pre-computed transport detection results
+  transportDetection?: unknown;
+
+  // Tool annotations context for security assessor optimization
+  toolAnnotationsContext?: ToolAnnotationsContext;
+
+  // External API dependency info for assessor behavior adjustment
+  externalAPIDependencies?: {
+    detectedCount: number;
+    domains?: string[];
+    toolsWithExternalAPIDependency: Set<string>;
+  };
 }
 
 export class AssessmentOrchestrator {
