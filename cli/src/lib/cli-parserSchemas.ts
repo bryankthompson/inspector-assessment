@@ -46,6 +46,7 @@ export const AssessmentProfileNameSchema = z.enum([
   "full",
   "dev",
   "all",
+  "audit",
 ]);
 
 /**

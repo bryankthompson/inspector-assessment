@@ -34,7 +34,8 @@ export type AssessmentProfileName =
   | "compliance"
   | "full"
   | "dev"
-  | "all";
+  | "all"
+  | "audit";
 
 /**
  * Module alias mappings for backward compatibility.
@@ -187,6 +188,21 @@ export const ASSESSMENT_PROFILES: Record<AssessmentProfileName, string[]> = {
    * Includes: Tier 1-4 + opt-in (prohibitedLibraries, manifestValidation, etc.)
    */
   all: [...ALL_MODULES],
+
+  /**
+   * Audit profile: Optimized for automated MCP auditing with reduced false positives
+   * Use when: --audit-mode flag, CI/CD pipeline audits
+   * Time: ~8-12 minutes
+   * Includes: Core security + compliance + capability + tool annotations
+   */
+  audit: [
+    "functionality",
+    "security",
+    "errorHandling",
+    "protocolCompliance",
+    "aupCompliance",
+    "toolAnnotations",
+  ],
 };
 
 /**
@@ -252,6 +268,13 @@ export const PROFILE_METADATA: Record<AssessmentProfileName, ProfileMetadata> =
         "Tier 4 (Development)",
         "Opt-In",
       ],
+    },
+    audit: {
+      description:
+        "Automated MCP auditing with reduced false positives (--audit-mode)",
+      estimatedTime: "~8-12 minutes",
+      moduleCount: ASSESSMENT_PROFILES.audit.length,
+      tiers: ["Tier 1 (Core Security)", "Tier 2 (Compliance, partial)"],
     },
   };
 
