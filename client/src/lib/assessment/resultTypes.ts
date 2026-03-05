@@ -238,6 +238,8 @@ export interface SecurityTestResult {
     /** Reason for adjustment (e.g., "Tool has readOnlyHint=true") */
     reason?: string;
   };
+  // Audit-mode fields for automated consumption
+  vulnerableHighConfidence?: boolean; // Only true when confidence === "high" AND vulnerable
 }
 
 // ============================================================================
@@ -663,6 +665,16 @@ export interface SecurityAssessment {
     connectionErrorCount: number;
     /** Percentage of tests that completed: validTestsCompleted / totalTestsAttempted * 100 */
     testCoveragePercent: number;
+  };
+  // Audit-mode: pre-computed false positive analysis
+  auditAnalysis?: {
+    highConfidenceVulnerabilities: string[];
+    needsReview: string[];
+    falsePositiveLikelihood: Record<string, "HIGH" | "MEDIUM" | "LOW">;
+    responseUniformity: Record<
+      string,
+      { uniqueResponses: number; totalTests: number }
+    >;
   };
 }
 

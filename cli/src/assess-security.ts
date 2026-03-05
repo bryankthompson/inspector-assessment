@@ -13,7 +13,7 @@
 
 import * as fs from "fs";
 import * as path from "path";
-import { execSync } from "child_process";
+import * as os from "os";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
@@ -23,77 +23,6 @@ import {
   CompatibilityCallToolResult,
 } from "@modelcontextprotocol/sdk/types.js";
 
-// Import shared server config loading (Issue #84 - Zod validation)
-import { loadServerConfig } from "./lib/assessment-runner/server-config.js";
-import type { ServerConfig } from "./lib/cli-parser.js";
-
-/**
- * Validate that a command is safe to execute
- * - Must be an absolute path or resolvable via PATH
- * - Must not contain shell metacharacters
- */
-function validateCommand(command: string): void {
-  // Check for shell metacharacters that could indicate injection
-  const dangerousChars = /[;&|`$(){}[\]<>!\\]/;
-  if (dangerousChars.test(command)) {
-    throw new Error(
-      `Invalid command: contains shell metacharacters: ${command}`,
-    );
-  }
-
-  // Verify the command exists and is executable
-  try {
-    // Use 'which' on Unix-like systems, 'where' on Windows
-    const whichCmd = process.platform === "win32" ? "where" : "which";
-    execSync(`${whichCmd} "${command}"`, { stdio: "pipe" });
-  } catch {
-    // Check if it's an absolute path that exists
-    if (path.isAbsolute(command) && fs.existsSync(command)) {
-      try {
-        fs.accessSync(command, fs.constants.X_OK);
-        return; // Command exists and is executable
-      } catch {
-        throw new Error(`Command not executable: ${command}`);
-      }
-    }
-    throw new Error(`Command not found: ${command}`);
-  }
-}
-
-/**
- * Validate environment variables from config
- * - Keys must be valid env var names (alphanumeric + underscore)
- * - Values should not contain null bytes
- */
-function validateEnvVars(
-  env: Record<string, string> | undefined,
-): Record<string, string> {
-  if (!env) return {};
-
-  const validatedEnv: Record<string, string> = {};
-  const validKeyPattern = /^[a-zA-Z_][a-zA-Z0-9_]*$/;
-
-  for (const [key, value] of Object.entries(env)) {
-    // Validate key format
-    if (!validKeyPattern.test(key)) {
-      console.warn(
-        `Skipping invalid environment variable name: ${key} (must match [a-zA-Z_][a-zA-Z0-9_]*)`,
-      );
-      continue;
-    }
-
-    // Check for null bytes in value (could truncate strings)
-    if (typeof value === "string" && value.includes("\0")) {
-      console.warn(`Skipping environment variable with null byte: ${key}`);
-      continue;
-    }
-
-    validatedEnv[key] = String(value);
-  }
-
-  return validatedEnv;
-}
-
 // Import from local client lib (will use package exports when published)
 import { SecurityAssessor } from "../../client/lib/services/assessment/modules/SecurityAssessor.js";
 import {
@@ -102,7 +31,14 @@ import {
   SecurityAssessment,
 } from "../../client/lib/lib/assessmentTypes.js";
 import { AssessmentContext } from "../../client/lib/services/assessment/AssessmentOrchestrator.js";
-import { loadPerformanceConfig } from "../../client/lib/services/assessment/config/performanceConfig.js";
+
+interface ServerConfig {
+  transport?: "stdio" | "http" | "sse";
+  command?: string;
+  args?: string[];
+  env?: Record<string, string>;
+  url?: string;
+}
 
 interface AssessmentOptions {
   serverName: string;
@@ -111,8 +47,65 @@ interface AssessmentOptions {
   toolName?: string;
   verbose?: boolean;
   helpRequested?: boolean;
-  /** Path to performance configuration JSON (Issue #37) */
-  performanceConfigPath?: string;
+}
+
+/**
+ * Load server configuration from Claude Code's MCP settings
+ */
+function loadServerConfig(
+  serverName: string,
+  configPath?: string,
+): ServerConfig {
+  const possiblePaths = [
+    configPath,
+    path.join(os.homedir(), ".config", "mcp", "servers", `${serverName}.json`),
+    path.join(os.homedir(), ".config", "claude", "claude_desktop_config.json"),
+  ].filter(Boolean) as string[];
+
+  for (const tryPath of possiblePaths) {
+    if (!fs.existsSync(tryPath)) continue;
+
+    const config = JSON.parse(fs.readFileSync(tryPath, "utf-8"));
+
+    if (config.mcpServers && config.mcpServers[serverName]) {
+      const serverConfig = config.mcpServers[serverName];
+      return {
+        transport: "stdio",
+        command: serverConfig.command,
+        args: serverConfig.args || [],
+        env: serverConfig.env || {},
+      };
+    }
+
+    if (
+      config.url ||
+      config.transport === "http" ||
+      config.transport === "sse"
+    ) {
+      if (!config.url) {
+        throw new Error(
+          `Invalid server config: transport is '${config.transport}' but 'url' is missing`,
+        );
+      }
+      return {
+        transport: config.transport || "http",
+        url: config.url,
+      };
+    }
+
+    if (config.command) {
+      return {
+        transport: "stdio",
+        command: config.command,
+        args: config.args || [],
+        env: config.env || {},
+      };
+    }
+  }
+
+  throw new Error(
+    `Server config not found for: ${serverName}\nTried: ${possiblePaths.join(", ")}`,
+  );
 }
 
 /**
@@ -136,13 +129,6 @@ async function connectToServer(config: ServerConfig): Promise<Client> {
     default:
       if (!config.command)
         throw new Error("Command required for stdio transport");
-
-      // Validate command before execution to prevent injection attacks
-      validateCommand(config.command);
-
-      // Validate and sanitize environment variables from config
-      const validatedEnv = validateEnvVars(config.env);
-
       transport = new StdioClientTransport({
         command: config.command,
         args: config.args,
@@ -150,7 +136,7 @@ async function connectToServer(config: ServerConfig): Promise<Client> {
           ...(Object.fromEntries(
             Object.entries(process.env).filter(([, v]) => v !== undefined),
           ) as Record<string, string>),
-          ...validatedEnv,
+          ...config.env,
         },
         stderr: "pipe",
       });
@@ -239,30 +225,6 @@ async function runSecurityAssessment(
     options.serverConfigPath,
   );
 
-  // Load custom performance config if provided (Issue #37)
-  // Note: Currently, modules use DEFAULT_PERFORMANCE_CONFIG directly.
-  // This validates the config file but doesn't override runtime values yet.
-  if (options.performanceConfigPath) {
-    try {
-      const performanceConfig = loadPerformanceConfig(
-        options.performanceConfigPath,
-      );
-      console.log(
-        `📊 Performance config loaded from: ${options.performanceConfigPath}`,
-      );
-      console.log(
-        `   Batch interval: ${performanceConfig.batchFlushIntervalMs}ms, ` +
-          `Security batch: ${performanceConfig.securityBatchSize}`,
-      );
-      // TODO: Wire performanceConfig through to SecurityAssessor
-    } catch (error) {
-      console.error(
-        `❌ Failed to load performance config: ${error instanceof Error ? error.message : String(error)}`,
-      );
-      throw error;
-    }
-  }
-
   const client = await connectToServer(serverConfig);
   console.log("✅ Connected successfully");
 
@@ -275,7 +237,7 @@ async function runSecurityAssessment(
 
   const config: AssessmentConfiguration = {
     ...DEFAULT_ASSESSMENT_CONFIG,
-    securityPatternsToTest: 30,
+    securityPatternsToTest: 13,
     reviewerMode: false,
     testTimeout: 30000,
   };
@@ -285,9 +247,10 @@ async function runSecurityAssessment(
     tools,
     callTool: createCallToolWrapper(client),
     config,
+    transportType: serverConfig.transport || "stdio",
   };
 
-  console.log(`🛡️  Running security assessment with 30 attack patterns...`);
+  console.log(`🛡️  Running security assessment with 13 attack patterns...`);
   const assessor = new SecurityAssessor(config);
   const results = await assessor.assess(context);
 
@@ -386,9 +349,6 @@ function parseArgs(): AssessmentOptions {
       case "-v":
         options.verbose = true;
         break;
-      case "--performance-config":
-        options.performanceConfigPath = args[++i];
-        break;
       case "--help":
       case "-h":
         printHelp();
@@ -427,23 +387,24 @@ function printHelp() {
   console.log(`
 Usage: mcp-assess-security [options] [server-name]
 
-Run security assessment against an MCP server with 30 attack patterns.
+Run security assessment against an MCP server with 13 attack patterns.
 
 Options:
   --server, -s <name>    Server name (required, or pass as first positional arg)
   --config, -c <path>    Path to server config JSON
   --output, -o <path>    Output JSON path (default: /tmp/inspector-security-assessment-<server>.json)
   --tool, -t <name>      Test only specific tool (default: test all tools)
-  --performance-config <path>  Path to performance tuning JSON (batch sizes, timeouts, etc.)
   --verbose, -v          Enable verbose logging
   --help, -h             Show this help message
 
-Attack Patterns Tested (30 total):
-  • Command Injection, SQL Injection, Path Traversal
-  • Calculator Injection, Code Execution, XXE
-  • Data Exfiltration, Token Theft, NoSQL Injection
-  • Unicode Bypass, Nested Injection, Package Squatting
-  • Session Management, Auth Bypass, and more...
+Attack Patterns Tested (13 total):
+  • Command Injection        • SQL Injection
+  • Calculator Injection     • Path Traversal
+  • Type Safety              • Boundary Testing
+  • Required Fields          • MCP Error Format
+  • Timeout Handling         • Indirect Prompt Injection
+  • Unicode Bypass           • Nested Injection
+  • Package Squatting
 
 Examples:
   mcp-assess-security my-server

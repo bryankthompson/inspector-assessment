@@ -1,27 +1,36 @@
 /**
  * Assessment Orchestrator
  * Coordinates all assessment modules and manages the assessment workflow
- *
- * @public
- * @module AssessmentOrchestrator
  */
 
 import {
   MCPDirectoryAssessment,
   AssessmentConfiguration,
+  AssessmentStatus,
   DEFAULT_ASSESSMENT_CONFIG,
   ManifestJsonSchema,
-  ProgressCallback,
-  ServerInfo,
-  PackageJson,
-  ToolAnnotationsContext,
 } from "@/lib/assessmentTypes";
 import {
   Tool,
   CompatibilityCallToolResult,
 } from "@modelcontextprotocol/sdk/types.js";
 
-// Note: All assessor module imports now handled by registry/AssessorDefinitions.ts (Issue #91)
+// Core assessment modules
+import { FunctionalityAssessor } from "./modules/FunctionalityAssessor";
+import { SecurityAssessor } from "./modules/SecurityAssessor";
+import { DocumentationAssessor } from "./modules/DocumentationAssessor";
+import { ErrorHandlingAssessor } from "./modules/ErrorHandlingAssessor";
+import { UsabilityAssessor } from "./modules/UsabilityAssessor";
+
+// Extended assessment modules
+import { MCPSpecComplianceAssessor } from "./modules/MCPSpecComplianceAssessor";
+
+// New MCP Directory Compliance Gap assessors
+import { AUPComplianceAssessor } from "./modules/AUPComplianceAssessor";
+import { ToolAnnotationAssessor } from "./modules/ToolAnnotationAssessor";
+import { ProhibitedLibrariesAssessor } from "./modules/ProhibitedLibrariesAssessor";
+import { ManifestValidationAssessor } from "./modules/ManifestValidationAssessor";
+import { PortabilityAssessor } from "./modules/PortabilityAssessor";
 
 // Claude Code integration for intelligent analysis
 import {
@@ -31,83 +40,6 @@ import {
 } from "./lib/claudeCodeBridge";
 import { TestDataGenerator } from "./TestDataGenerator";
 
-// Structured logging
-import { Logger, createLogger, DEFAULT_LOGGING_CONFIG } from "./lib/logger";
-
-// Extracted helpers for testability
-import {
-  determineOverallStatus,
-  generateSummary,
-  generateRecommendations,
-} from "./orchestratorHelpers";
-
-// External API dependency detection (Issue #168)
-import { ExternalAPIDependencyInfo } from "./helpers/ExternalAPIDependencyDetector";
-
-// Stdio transport detection (Issue #172)
-import { TransportDetectionResult } from "./helpers/StdioTransportDetector";
-
-// Registry pattern for assessor management (Issue #91)
-import { AssessorRegistry, ASSESSOR_DEFINITIONS } from "./registry";
-
-// Module scoring for dual-key output (Issue #124)
-import { calculateModuleScore } from "@/lib/moduleScoring";
-
-// Types for dual-key output
-import type { DeveloperExperienceAssessment } from "@/lib/assessment/extendedTypes";
-
-/**
- * MCP Resource interface for assessment context
- * @public
- */
-export interface MCPResource {
-  uri: string;
-  name?: string;
-  description?: string;
-  mimeType?: string;
-}
-
-/**
- * MCP Resource Template interface for assessment context
- * @public
- */
-export interface MCPResourceTemplate {
-  uriTemplate: string;
-  name?: string;
-  description?: string;
-  mimeType?: string;
-}
-
-/**
- * MCP Prompt interface for assessment context
- * @public
- */
-export interface MCPPrompt {
-  name: string;
-  description?: string;
-  arguments?: Array<{
-    name: string;
-    description?: string;
-    required?: boolean;
-  }>;
-}
-
-/**
- * MCP Server Capabilities interface
- * @public
- */
-export interface MCPServerCapabilities {
-  tools?: { listChanged?: boolean };
-  resources?: { subscribe?: boolean; listChanged?: boolean };
-  prompts?: { listChanged?: boolean };
-  logging?: Record<string, unknown>;
-  experimental?: Record<string, unknown>;
-}
-
-/**
- * Assessment context providing all inputs needed for MCP server assessment
- * @public
- */
 export interface AssessmentContext {
   serverName: string;
   tools: Tool[];
@@ -116,11 +48,15 @@ export interface AssessmentContext {
     params: Record<string, unknown>,
   ) => Promise<CompatibilityCallToolResult>;
   readmeContent?: string;
-  packageJson?: PackageJson;
+  packageJson?: unknown;
   packageLock?: unknown;
   privacyPolicy?: unknown;
   config: AssessmentConfiguration;
-  serverInfo?: ServerInfo;
+  serverInfo?: {
+    name: string;
+    version?: string;
+    metadata?: unknown;
+  };
 
   // Enhanced mode: Source code analysis (optional)
   // When provided, enables deeper analysis for AUP, prohibited libraries, portability
@@ -131,66 +67,13 @@ export interface AssessmentContext {
   manifestJson?: ManifestJsonSchema;
   manifestRaw?: string; // Raw manifest.json content for parsing validation
 
-  // Progress callback for real-time test progress events
-  // Called by assessors to emit batched progress during execution
-  onProgress?: ProgressCallback;
-
-  // MCP Resources and Prompts (for extended assessments)
-  resources?: MCPResource[];
-  resourceTemplates?: MCPResourceTemplate[];
-  prompts?: MCPPrompt[];
-  serverCapabilities?: MCPServerCapabilities;
-
-  // Resource and prompt operations (optional - provided by CLI runner)
-  readResource?: (uri: string) => Promise<string>;
-  getPrompt?: (
-    name: string,
-    args: Record<string, string>,
-  ) => Promise<{ messages: Array<{ role: string; content: string }> }>;
-
-  // Transport configuration for security assessment
-  transportConfig?: {
-    type: "stdio" | "sse" | "streamable-http";
-    url?: string;
-    usesTLS?: boolean;
-    oauthEnabled?: boolean;
-  };
-
-  // Tool refresh for temporal definition tracking (optional)
-  // When provided, enables detection of tool definition mutations (rug pulls)
-  listTools?: () => Promise<Tool[]>;
-
-  // External API dependency detection (Issue #168)
-  // When provided, enables assessors to adjust behavior for external API tools
-  // Populated during context preparation by ExternalAPIDependencyDetector
-  externalAPIDependencies?: ExternalAPIDependencyInfo;
-
-  // Stdio transport detection (Issue #172)
-  // When provided, enables accurate C6/F6 compliance for stdio servers
-  // Populated during context preparation by StdioTransportDetector
-  transportDetection?: TransportDetectionResult;
-
-  // Tool annotations context (Issue #170)
-  // Pre-extracted tool annotations for security severity adjustment
-  // Enables annotation-aware false positive reduction for read-only servers
-  toolAnnotationsContext?: ToolAnnotationsContext;
+  // Transport type for context-aware security testing
+  // Used to skip irrelevant tests (e.g., path traversal on remote servers)
+  transportType?: "stdio" | "http" | "sse";
 }
 
-/**
- * Main orchestrator class for running MCP server assessments
- *
- * @public
- * @example
- * ```typescript
- * import { AssessmentOrchestrator, AssessmentContext } from '@bryan-thompson/inspector-assessment';
- *
- * const orchestrator = new AssessmentOrchestrator();
- * const result = await orchestrator.runFullAssessment(context);
- * ```
- */
 export class AssessmentOrchestrator {
   private config: AssessmentConfiguration;
-  private logger: Logger;
   private startTime: number = 0;
   private totalTestsRun: number = 0;
 
@@ -198,57 +81,78 @@ export class AssessmentOrchestrator {
   private claudeBridge?: ClaudeCodeBridge;
   private claudeEnabled: boolean = false;
 
-  // Registry for assessor management (Issue #91)
-  // Delegates construction, test count aggregation, and Claude bridge wiring
-  private registry: AssessorRegistry;
+  // Core assessors
+  private functionalityAssessor: FunctionalityAssessor;
+  private securityAssessor: SecurityAssessor;
+  private documentationAssessor: DocumentationAssessor;
+  private errorHandlingAssessor: ErrorHandlingAssessor;
+  private usabilityAssessor: UsabilityAssessor;
+
+  // Extended assessors
+  private mcpSpecAssessor?: MCPSpecComplianceAssessor;
+
+  // New MCP Directory Compliance Gap assessors
+  private aupComplianceAssessor?: AUPComplianceAssessor;
+  private toolAnnotationAssessor?: ToolAnnotationAssessor;
+  private prohibitedLibrariesAssessor?: ProhibitedLibrariesAssessor;
+  private manifestValidationAssessor?: ManifestValidationAssessor;
+  private portabilityAssessor?: PortabilityAssessor;
 
   constructor(config: Partial<AssessmentConfiguration> = {}) {
     this.config = { ...DEFAULT_ASSESSMENT_CONFIG, ...config };
-
-    // Initialize logger
-    this.logger = createLogger(
-      "AssessmentOrchestrator",
-      this.config.logging ?? DEFAULT_LOGGING_CONFIG,
-    );
-
-    // Emit deprecation warnings for deprecated config flags
-    if (this.config.assessmentCategories?.mcpSpecCompliance !== undefined) {
-      this.logger.warn(
-        "Config flag 'mcpSpecCompliance' is deprecated. Use 'protocolCompliance' instead. " +
-          "This flag will be removed in v2.0.0.",
-        { flag: "mcpSpecCompliance", replacement: "protocolCompliance" },
-      );
-    }
-    if (this.config.assessmentCategories?.protocolConformance !== undefined) {
-      this.logger.warn(
-        "Config flag 'protocolConformance' is deprecated. Use 'protocolCompliance' instead. " +
-          "This flag will be removed in v2.0.0.",
-        { flag: "protocolConformance", replacement: "protocolCompliance" },
-      );
-    }
 
     // Initialize Claude Code Bridge if enabled in config
     if (this.config.claudeCode?.enabled) {
       this.initializeClaudeBridge(this.config.claudeCode);
     }
 
-    // Initialize registry and register all enabled assessors (Issue #91)
-    // The registry handles:
-    // - Conditional instantiation based on config flags
-    // - Deprecated flag OR logic (e.g., protocolCompliance supports 3 flags)
-    // - Custom setup (e.g., ToolAnnotationAssessor pattern config)
-    // - Claude bridge wiring for supporting assessors
-    this.registry = new AssessorRegistry(this.config);
-    this.registry.registerAll(ASSESSOR_DEFINITIONS);
+    // Initialize core assessors
+    this.functionalityAssessor = new FunctionalityAssessor(this.config);
+    this.securityAssessor = new SecurityAssessor(this.config);
+    this.documentationAssessor = new DocumentationAssessor(this.config);
+    this.errorHandlingAssessor = new ErrorHandlingAssessor(this.config);
+    this.usabilityAssessor = new UsabilityAssessor(this.config);
 
-    // Wire up Claude bridge to registry (handles all supporting assessors)
-    if (this.claudeBridge) {
-      this.registry.setClaudeBridge(this.claudeBridge);
-      TestDataGenerator.setClaudeBridge(this.claudeBridge);
+    // Initialize extended assessors if enabled
+    if (this.config.enableExtendedAssessment) {
+      if (this.config.assessmentCategories?.mcpSpecCompliance) {
+        this.mcpSpecAssessor = new MCPSpecComplianceAssessor(this.config);
+      }
+
+      // Initialize new MCP Directory Compliance Gap assessors
+      if (this.config.assessmentCategories?.aupCompliance) {
+        this.aupComplianceAssessor = new AUPComplianceAssessor(this.config);
+        // Wire up Claude bridge for semantic analysis
+        if (this.claudeBridge) {
+          this.aupComplianceAssessor.setClaudeBridge(this.claudeBridge);
+        }
+      }
+      if (this.config.assessmentCategories?.toolAnnotations) {
+        this.toolAnnotationAssessor = new ToolAnnotationAssessor(this.config);
+        // Wire up Claude bridge for behavior inference
+        if (this.claudeBridge) {
+          this.toolAnnotationAssessor.setClaudeBridge(this.claudeBridge);
+        }
+      }
+      if (this.config.assessmentCategories?.prohibitedLibraries) {
+        this.prohibitedLibrariesAssessor = new ProhibitedLibrariesAssessor(
+          this.config,
+        );
+      }
+      if (this.config.assessmentCategories?.manifestValidation) {
+        this.manifestValidationAssessor = new ManifestValidationAssessor(
+          this.config,
+        );
+      }
+      if (this.config.assessmentCategories?.portability) {
+        this.portabilityAssessor = new PortabilityAssessor(this.config);
+      }
     }
 
-    // Set logger for TestDataGenerator diagnostic output
-    TestDataGenerator.setLogger(this.logger);
+    // Wire up Claude bridge to TestDataGenerator for intelligent test generation
+    if (this.claudeBridge) {
+      TestDataGenerator.setClaudeBridge(this.claudeBridge);
+    }
   }
 
   /**
@@ -257,15 +161,17 @@ export class AssessmentOrchestrator {
    */
   private initializeClaudeBridge(bridgeConfig: ClaudeCodeBridgeConfig): void {
     try {
-      this.claudeBridge = new ClaudeCodeBridge(bridgeConfig, this.logger);
+      this.claudeBridge = new ClaudeCodeBridge(bridgeConfig);
       this.claudeEnabled = true;
-      this.logger.info("Claude Code Bridge initialized", {
-        features: bridgeConfig.features,
-      });
+      console.log(
+        "[AssessmentOrchestrator] Claude Code Bridge initialized with features:",
+        bridgeConfig.features,
+      );
     } catch (error) {
-      this.logger.warn("Failed to initialize Claude Code Bridge", {
-        error: String(error),
-      });
+      console.warn(
+        "[AssessmentOrchestrator] Failed to initialize Claude Code Bridge:",
+        error,
+      );
       this.claudeEnabled = false;
     }
   }
@@ -273,7 +179,6 @@ export class AssessmentOrchestrator {
   /**
    * Enable Claude Code integration programmatically
    * Call this method to enable Claude features after construction
-   * @public
    */
   enableClaudeCode(config?: Partial<ClaudeCodeBridgeConfig>): void {
     const bridgeConfig: ClaudeCodeBridgeConfig = {
@@ -284,16 +189,20 @@ export class AssessmentOrchestrator {
 
     this.initializeClaudeBridge(bridgeConfig);
 
-    // Wire up to all supporting assessors via registry
+    // Wire up to existing assessors
     if (this.claudeBridge) {
-      this.registry.setClaudeBridge(this.claudeBridge);
+      if (this.aupComplianceAssessor) {
+        this.aupComplianceAssessor.setClaudeBridge(this.claudeBridge);
+      }
+      if (this.toolAnnotationAssessor) {
+        this.toolAnnotationAssessor.setClaudeBridge(this.claudeBridge);
+      }
       TestDataGenerator.setClaudeBridge(this.claudeBridge);
     }
   }
 
   /**
    * Check if Claude Code integration is enabled and available
-   * @public
    */
   isClaudeEnabled(): boolean {
     return this.claudeEnabled && this.claudeBridge !== undefined;
@@ -301,108 +210,174 @@ export class AssessmentOrchestrator {
 
   /**
    * Get Claude Code Bridge for external access
-   * @public
    */
   getClaudeBridge(): ClaudeCodeBridge | undefined {
     return this.claudeBridge;
   }
 
   /**
+   * Reset test counts for all assessors
+   */
+  private resetAllTestCounts(): void {
+    this.functionalityAssessor.resetTestCount();
+    this.securityAssessor.resetTestCount();
+    this.documentationAssessor.resetTestCount();
+    this.errorHandlingAssessor.resetTestCount();
+    this.usabilityAssessor.resetTestCount();
+    if (this.mcpSpecAssessor) {
+      this.mcpSpecAssessor.resetTestCount();
+    }
+    // Reset new assessors
+    if (this.aupComplianceAssessor) {
+      this.aupComplianceAssessor.resetTestCount();
+    }
+    if (this.toolAnnotationAssessor) {
+      this.toolAnnotationAssessor.resetTestCount();
+    }
+    if (this.prohibitedLibrariesAssessor) {
+      this.prohibitedLibrariesAssessor.resetTestCount();
+    }
+    if (this.manifestValidationAssessor) {
+      this.manifestValidationAssessor.resetTestCount();
+    }
+    if (this.portabilityAssessor) {
+      this.portabilityAssessor.resetTestCount();
+    }
+  }
+
+  /**
    * Run a complete assessment on an MCP server
-   * @public
    */
   async runFullAssessment(
     context: AssessmentContext,
   ): Promise<MCPDirectoryAssessment> {
     this.startTime = Date.now();
     this.totalTestsRun = 0;
-    this.registry.resetAllTestCounts();
+    this.resetAllTestCounts();
 
-    // Execute all assessors via registry (Issue #91)
-    // Registry handles:
-    // - Phase-ordered execution (Phase 0/PRE always runs first and sequentially)
-    // - Parallel vs sequential based on config.parallelTesting
-    // - JSONL events (module_started, module_progress)
-    // - Test count tracking
-    const assessmentResults = await this.registry.executeAll(context);
+    // Run assessments in parallel if enabled
+    const assessmentPromises: Promise<any>[] = [];
+    const assessmentResults: any = {};
 
-    // Integrate temporal findings into security.vulnerabilities for unified view
-    if (
-      assessmentResults.temporal?.rugPullsDetected &&
-      assessmentResults.temporal.rugPullsDetected > 0 &&
-      assessmentResults.security
-    ) {
-      for (const detail of assessmentResults.temporal.details.filter(
-        (d: { vulnerable: boolean }) => d.vulnerable,
-      )) {
-        assessmentResults.security.vulnerabilities.push(
-          `RUG_PULL_TEMPORAL: ${detail.tool} - Tool behavior changed after invocation ${detail.firstDeviationAt}. Requires immediate manual review.`,
+    if (this.config.parallelTesting) {
+      // Core assessments
+      assessmentPromises.push(
+        this.functionalityAssessor
+          .assess(context)
+          .then((r) => (assessmentResults.functionality = r)),
+        this.securityAssessor
+          .assess(context)
+          .then((r) => (assessmentResults.security = r)),
+        this.documentationAssessor
+          .assess(context)
+          .then((r) => (assessmentResults.documentation = r)),
+        this.errorHandlingAssessor
+          .assess(context)
+          .then((r) => (assessmentResults.errorHandling = r)),
+        this.usabilityAssessor
+          .assess(context)
+          .then((r) => (assessmentResults.usability = r)),
+      );
+
+      // Extended assessments
+      if (this.mcpSpecAssessor) {
+        assessmentPromises.push(
+          this.mcpSpecAssessor
+            .assess(context)
+            .then((r) => (assessmentResults.mcpSpecCompliance = r)),
         );
       }
-    }
 
-    // Issue #124: Dual-key output for v2.0.0 transition
-    // Output BOTH old and new keys to maintain backward compatibility
-    // Old keys (documentation, usability, mcpSpecCompliance) will be removed in v2.0.0
+      // New MCP Directory Compliance Gap assessments
+      if (this.aupComplianceAssessor) {
+        assessmentPromises.push(
+          this.aupComplianceAssessor
+            .assess(context)
+            .then((r) => (assessmentResults.aupCompliance = r)),
+        );
+      }
+      if (this.toolAnnotationAssessor) {
+        assessmentPromises.push(
+          this.toolAnnotationAssessor
+            .assess(context)
+            .then((r) => (assessmentResults.toolAnnotations = r)),
+        );
+      }
+      if (this.prohibitedLibrariesAssessor) {
+        assessmentPromises.push(
+          this.prohibitedLibrariesAssessor
+            .assess(context)
+            .then((r) => (assessmentResults.prohibitedLibraries = r)),
+        );
+      }
+      if (this.manifestValidationAssessor) {
+        assessmentPromises.push(
+          this.manifestValidationAssessor
+            .assess(context)
+            .then((r) => (assessmentResults.manifestValidation = r)),
+        );
+      }
+      if (this.portabilityAssessor) {
+        assessmentPromises.push(
+          this.portabilityAssessor
+            .assess(context)
+            .then((r) => (assessmentResults.portability = r)),
+        );
+      }
 
-    // developerExperience (new) = documentation + usability (deprecated)
-    if (assessmentResults.documentation && assessmentResults.usability) {
-      const docScore =
-        calculateModuleScore(assessmentResults.documentation) ?? 50;
-      const usabilityScore =
-        calculateModuleScore(assessmentResults.usability) ?? 50;
-      const combinedStatus = determineOverallStatus({
-        documentation: assessmentResults.documentation,
-        usability: assessmentResults.usability,
-      });
-      assessmentResults.developerExperience = {
-        documentation: assessmentResults.documentation,
-        usability: assessmentResults.usability,
-        status: combinedStatus,
-        score: Math.round((docScore + usabilityScore) / 2),
-      } as DeveloperExperienceAssessment;
+      await Promise.all(assessmentPromises);
+    } else {
+      // Sequential execution
+      assessmentResults.functionality =
+        await this.functionalityAssessor.assess(context);
+      assessmentResults.security = await this.securityAssessor.assess(context);
+      assessmentResults.documentation =
+        await this.documentationAssessor.assess(context);
+      assessmentResults.errorHandling =
+        await this.errorHandlingAssessor.assess(context);
+      assessmentResults.usability =
+        await this.usabilityAssessor.assess(context);
 
-      // Emit deprecation warning for old keys
-      this.logger.warn(
-        "Output keys 'documentation' and 'usability' are deprecated. " +
-          "Use 'developerExperience' instead. These keys will be removed in v2.0.0.",
-        {
-          deprecated: ["documentation", "usability"],
-          replacement: "developerExperience",
-        },
-      );
-    }
+      if (this.mcpSpecAssessor) {
+        assessmentResults.mcpSpecCompliance =
+          await this.mcpSpecAssessor.assess(context);
+      }
 
-    // protocolCompliance (new) = mcpSpecCompliance (deprecated)
-    if (assessmentResults.mcpSpecCompliance) {
-      assessmentResults.protocolCompliance =
-        assessmentResults.mcpSpecCompliance;
-
-      // Emit deprecation warning for old key
-      this.logger.warn(
-        "Output key 'mcpSpecCompliance' is deprecated. " +
-          "Use 'protocolCompliance' instead. This key will be removed in v2.0.0.",
-        {
-          deprecated: ["mcpSpecCompliance"],
-          replacement: "protocolCompliance",
-        },
-      );
+      // New MCP Directory Compliance Gap assessments (sequential)
+      if (this.aupComplianceAssessor) {
+        assessmentResults.aupCompliance =
+          await this.aupComplianceAssessor.assess(context);
+      }
+      if (this.toolAnnotationAssessor) {
+        assessmentResults.toolAnnotations =
+          await this.toolAnnotationAssessor.assess(context);
+      }
+      if (this.prohibitedLibrariesAssessor) {
+        assessmentResults.prohibitedLibraries =
+          await this.prohibitedLibrariesAssessor.assess(context);
+      }
+      if (this.manifestValidationAssessor) {
+        assessmentResults.manifestValidation =
+          await this.manifestValidationAssessor.assess(context);
+      }
+      if (this.portabilityAssessor) {
+        assessmentResults.portability =
+          await this.portabilityAssessor.assess(context);
+      }
     }
 
     // Collect test counts from all assessors
     this.totalTestsRun = this.collectTotalTestCount();
 
     // Determine overall status
-    const overallStatus = determineOverallStatus(assessmentResults);
+    const overallStatus = this.determineOverallStatus(assessmentResults);
 
     // Generate summary and recommendations
-    const summary = generateSummary(assessmentResults);
-    const recommendations = generateRecommendations(assessmentResults);
+    const summary = this.generateSummary(assessmentResults);
+    const recommendations = this.generateRecommendations(assessmentResults);
 
     const executionTime = Date.now() - this.startTime;
 
-    // Type assertion needed because Partial<MCPDirectoryAssessment> has optional required fields
-    // When modules are skipped via --skip-modules, not all fields will be present
     return {
       serverName: context.serverName,
       assessmentDate: new Date().toISOString(),
@@ -414,22 +389,11 @@ export class AssessmentOrchestrator {
       executionTime,
       totalTestsRun: this.totalTestsRun,
       mcpProtocolVersion: this.config.mcpProtocolVersion,
-      assessmentMetadata: {
-        // Source code is available if we have a path OR loaded source files
-        sourceCodeAvailable:
-          !!context.sourceCodePath || (context.sourceCodeFiles?.size ?? 0) > 0,
-        // Use explicit transport type, or infer from available context
-        transportType:
-          context.transportConfig?.type ??
-          (context.transportConfig?.url ? "streamable-http" : undefined),
-      },
-    } as MCPDirectoryAssessment;
+    };
   }
 
   /**
    * Legacy assess method for backward compatibility
-   * @public
-   * @deprecated Use runFullAssessment() with AssessmentContext instead
    */
   async assess(
     serverName: string,
@@ -438,9 +402,9 @@ export class AssessmentOrchestrator {
       name: string,
       params: Record<string, unknown>,
     ) => Promise<CompatibilityCallToolResult>,
-    serverInfo?: ServerInfo,
+    serverInfo?: any,
     readmeContent?: string,
-    packageJson?: PackageJson,
+    packageJson?: any,
   ): Promise<MCPDirectoryAssessment> {
     const context: AssessmentContext = {
       serverName,
@@ -456,15 +420,154 @@ export class AssessmentOrchestrator {
   }
 
   private collectTotalTestCount(): number {
-    // Delegate to registry for centralized test count aggregation (Issue #91)
-    const total = this.registry.getTotalTestCount();
-    this.logger.debug("Total test count", { total });
+    let total = 0;
+
+    // Get actual test counts from assessors
+    const functionalityCount = this.functionalityAssessor.getTestCount();
+    const securityCount = this.securityAssessor.getTestCount();
+    const documentationCount = this.documentationAssessor.getTestCount();
+    const errorHandlingCount = this.errorHandlingAssessor.getTestCount();
+    const usabilityCount = this.usabilityAssessor.getTestCount();
+    const mcpSpecCount = this.mcpSpecAssessor?.getTestCount() || 0;
+
+    // New assessor counts
+    const aupCount = this.aupComplianceAssessor?.getTestCount() || 0;
+    const annotationCount = this.toolAnnotationAssessor?.getTestCount() || 0;
+    const librariesCount =
+      this.prohibitedLibrariesAssessor?.getTestCount() || 0;
+    const manifestCount = this.manifestValidationAssessor?.getTestCount() || 0;
+    const portabilityCount = this.portabilityAssessor?.getTestCount() || 0;
+
+    console.log("[AssessmentOrchestrator] Test counts by assessor:", {
+      functionality: functionalityCount,
+      security: securityCount,
+      documentation: documentationCount,
+      errorHandling: errorHandlingCount,
+      usability: usabilityCount,
+      mcpSpec: mcpSpecCount,
+      aupCompliance: aupCount,
+      toolAnnotations: annotationCount,
+      prohibitedLibraries: librariesCount,
+      manifestValidation: manifestCount,
+      portability: portabilityCount,
+    });
+
+    total =
+      functionalityCount +
+      securityCount +
+      documentationCount +
+      errorHandlingCount +
+      usabilityCount +
+      mcpSpecCount +
+      aupCount +
+      annotationCount +
+      librariesCount +
+      manifestCount +
+      portabilityCount;
+
+    console.log("[AssessmentOrchestrator] Total test count:", total);
+
     return total;
+  }
+
+  private determineOverallStatus(results: any): AssessmentStatus {
+    const statuses: AssessmentStatus[] = [];
+
+    // Collect all statuses
+    Object.values(results).forEach((assessment: any) => {
+      if (assessment?.status) {
+        statuses.push(assessment.status);
+      }
+    });
+
+    // If any critical category fails, overall fails
+    if (statuses.includes("FAIL")) return "FAIL";
+
+    // If any category needs more info, overall needs more info
+    if (statuses.includes("NEED_MORE_INFO")) return "NEED_MORE_INFO";
+
+    // All must pass for overall pass
+    return "PASS";
+  }
+
+  private generateSummary(results: any): string {
+    const parts: string[] = [];
+    const totalCategories = Object.keys(results).length;
+    const passedCategories = Object.values(results).filter(
+      (r: any) => r?.status === "PASS",
+    ).length;
+
+    parts.push(
+      `Assessment complete: ${passedCategories}/${totalCategories} categories passed.`,
+    );
+
+    // Add key findings
+    if (results.security?.vulnerabilities?.length > 0) {
+      parts.push(
+        `Found ${results.security.vulnerabilities.length} security vulnerabilities.`,
+      );
+    }
+
+    if (results.functionality?.brokenTools?.length > 0) {
+      parts.push(
+        `${results.functionality.brokenTools.length} tools are not functioning correctly.`,
+      );
+    }
+
+    // New assessor findings
+    if (results.aupCompliance?.violations?.length > 0) {
+      const criticalCount = results.aupCompliance.violations.filter(
+        (v: any) => v.severity === "CRITICAL",
+      ).length;
+      if (criticalCount > 0) {
+        parts.push(`CRITICAL: ${criticalCount} AUP violation(s) detected.`);
+      } else {
+        parts.push(
+          `${results.aupCompliance.violations.length} AUP item(s) flagged for review.`,
+        );
+      }
+    }
+
+    if (results.toolAnnotations?.missingAnnotationsCount > 0) {
+      parts.push(
+        `${results.toolAnnotations.missingAnnotationsCount} tools missing annotations.`,
+      );
+    }
+
+    if (results.prohibitedLibraries?.matches?.length > 0) {
+      const blockingCount = results.prohibitedLibraries.matches.filter(
+        (m: any) => m.severity === "BLOCKING",
+      ).length;
+      if (blockingCount > 0) {
+        parts.push(
+          `BLOCKING: ${blockingCount} prohibited library/libraries detected.`,
+        );
+      }
+    }
+
+    if (results.portability?.usesBundleRoot) {
+      parts.push("Uses ${BUNDLE_ROOT} anti-pattern.");
+    }
+
+    return parts.join(" ");
+  }
+
+  private generateRecommendations(results: any): string[] {
+    const recommendations: string[] = [];
+
+    // Aggregate recommendations from all assessments
+    Object.values(results).forEach((assessment: any) => {
+      if (assessment?.recommendations) {
+        recommendations.push(...assessment.recommendations);
+      }
+    });
+
+    // De-duplicate and prioritize
+    return [...new Set(recommendations)].slice(0, 10);
   }
 
   /**
    * Get assessment configuration
-   * @public
    */
   getConfig(): AssessmentConfiguration {
     return this.config;
@@ -472,7 +575,6 @@ export class AssessmentOrchestrator {
 
   /**
    * Update assessment configuration
-   * @public
    */
   updateConfig(config: Partial<AssessmentConfiguration>): void {
     this.config = { ...this.config, ...config };

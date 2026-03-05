@@ -391,6 +391,9 @@ export class SecurityAssessor extends BaseAssessor {
         ? Math.round((validTestsCompleted / totalTestsAttempted) * 100)
         : 0;
 
+    // Compute audit analysis (pre-computed FP analysis for automated consumption)
+    const auditAnalysis = this.computeAuditAnalysis(validTests);
+
     return {
       promptInjectionTests: allTests,
       vulnerabilities,
@@ -408,6 +411,7 @@ export class SecurityAssessor extends BaseAssessor {
         connectionErrorCount: connectionErrors.length,
         testCoveragePercent,
       },
+      auditAnalysis,
     };
   }
 
@@ -624,6 +628,86 @@ export class SecurityAssessor extends BaseAssessor {
     }
 
     return allResults;
+  }
+
+  /**
+   * Compute audit analysis for automated consumption
+   * Pre-computes false positive likelihood and response uniformity per tool
+   */
+  private computeAuditAnalysis(validTests: SecurityTestResult[]): {
+    highConfidenceVulnerabilities: string[];
+    needsReview: string[];
+    falsePositiveLikelihood: Record<string, "HIGH" | "MEDIUM" | "LOW">;
+    responseUniformity: Record<
+      string,
+      { uniqueResponses: number; totalTests: number }
+    >;
+  } {
+    const highConfVulns: string[] = [];
+    const needsReview: string[] = [];
+    const fpLikelihood: Record<string, "HIGH" | "MEDIUM" | "LOW"> = {};
+    const uniformity: Record<
+      string,
+      { uniqueResponses: number; totalTests: number }
+    > = {};
+
+    // Group vulnerable tests by tool
+    const vulnByTool: Record<string, SecurityTestResult[]> = {};
+    for (const test of validTests) {
+      if (test.vulnerable) {
+        const name = test.toolName || "unknown";
+        if (!vulnByTool[name]) vulnByTool[name] = [];
+        vulnByTool[name].push(test);
+      }
+    }
+
+    for (const [toolName, tests] of Object.entries(vulnByTool)) {
+      // High confidence vulnerabilities
+      const highConf = tests.filter(
+        (t) => !t.confidence || t.confidence === "high",
+      );
+      if (highConf.length > 0) {
+        highConfVulns.push(
+          `${toolName}: ${highConf.map((t) => t.testName).join(", ")}`,
+        );
+      }
+
+      // Needs review (medium/low confidence)
+      const reviewNeeded = tests.filter(
+        (t) => t.confidence === "medium" || t.confidence === "low",
+      );
+      if (reviewNeeded.length > 0) {
+        needsReview.push(
+          `${toolName}: ${reviewNeeded.map((t) => t.testName).join(", ")}`,
+        );
+      }
+
+      // Response uniformity analysis
+      const responses = tests.map((t) =>
+        (t.response || "").trim().substring(0, 200),
+      );
+      const uniqueResponses = new Set(responses).size;
+      uniformity[toolName] = {
+        uniqueResponses,
+        totalTests: tests.length,
+      };
+
+      // FP likelihood based on response uniformity
+      if (uniqueResponses === 1 && tests.length >= 2) {
+        fpLikelihood[toolName] = "HIGH";
+      } else if (uniqueResponses < tests.length / 2 && tests.length >= 4) {
+        fpLikelihood[toolName] = "MEDIUM";
+      } else {
+        fpLikelihood[toolName] = "LOW";
+      }
+    }
+
+    return {
+      highConfidenceVulnerabilities: highConfVulns,
+      needsReview,
+      falsePositiveLikelihood: fpLikelihood,
+      responseUniformity: uniformity,
+    };
   }
 
   /**
