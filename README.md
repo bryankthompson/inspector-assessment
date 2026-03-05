@@ -353,7 +353,7 @@ Our enhanced MCP Inspector includes a comprehensive assessment system that valid
    - Input validation and sanitization checks
    - Authentication/authorization testing
    - Sensitive data exposure detection
-   - Dual-mode testing: Reviewer mode (3 critical patterns) + Developer mode (all 17 patterns)
+   - Dual-mode testing: Reviewer mode (3 critical patterns) + Developer mode (all 13 patterns)
 
 5. **Usability**
    - Tool naming consistency analysis

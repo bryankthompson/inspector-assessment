@@ -14,8 +14,9 @@
 - Development mode: `npm run dev` (use `npm run dev:windows` on Windows)
 - Format code: `npm run prettier-fix`
 - Client lint: `cd client && npm run lint`
-- Run tests: `npm test` (464 passing, 100% pass rate)
+- Run tests: `npm test` (696 total, 669 passing, 27 timeout failures)
 - Run assessment tests: `npm test -- assessment` (208 assessment module tests)
+- Note: 27 test failures are SecurityAssessor timeout issues (480s limit), not logic errors
 
 ## Code Style Guidelines
 
@@ -195,6 +196,7 @@ For detailed documentation on specific features, see:
 - **Functionality Testing**: [README.md](README.md#2-optimized-progressive-complexity-testing) - Multi-scenario validation, progressive complexity
 - **Security Assessment**: [README.md](README.md#4-context-aware-security-assessment-with-zero-false-positives) - Domain-specific patterns, zero false positives
 - **Error Handling**: [README.md](README.md#assessment-categories) - MCP protocol compliance, validation quality
+- **MCP Spec Reference**: [docs/mcp_spec_11-2025.md](docs/mcp_spec_11-2025.md) - Protocol revision 2025-11-25 (latest)
 - **MCP Spec Compliance**: See PROJECT_STATUS.md timeline for latest enhancements
 - **Recent Changes**: [PROJECT_STATUS.md](PROJECT_STATUS.md#development-timeline---october-2025)
 
@@ -217,7 +219,7 @@ For detailed documentation on specific features, see:
 
 **Testing:**
 
-- `client/src/services/__tests__/` - 464 total tests (100% passing)
+- `client/src/services/__tests__/` - 696 total tests (669 passing, 27 timeout failures)
 - `client/src/services/assessment/__tests__/` - 208 assessment module tests
 
 ## Development Workflow

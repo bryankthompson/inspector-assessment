@@ -36,7 +36,7 @@
 
 1. **Switch to Developer Mode**
    - Click mode selector and choose "Developer Mode"
-   - Enables comprehensive testing (all 18 security patterns instead of 3)
+   - Enables comprehensive testing (all 13 security patterns instead of 3)
    - Takes 5-10 minutes vs 1-2 minutes for reviewer mode
 
 2. **Re-run Assessment**
@@ -100,13 +100,13 @@
 **Testing modes**:
 
 - **Reviewer Mode**: 3 critical patterns (48 tests for typical 16-tool server)
-- **Developer Mode**: 18 comprehensive patterns (900+ tests for typical 16-tool server)
+- **Developer Mode**: 13 comprehensive patterns (900+ tests for typical 16-tool server)
 
 **Example - PASS**:
 
 ```
 ✅ Security: 0 vulnerabilities found
-- Patterns tested: 3 (Reviewer) or 18 (Developer)
+- Patterns tested: 3 (Reviewer) or 13 (Developer)
 - Risk level: LOW
 - All tools properly reject malicious inputs
 ```
@@ -496,7 +496,7 @@ If you encounter problems or have suggestions:
 | Feature                  | Reviewer Mode               | Developer Mode                   |
 | ------------------------ | --------------------------- | -------------------------------- |
 | **Speed**                | 1-2 minutes                 | 5-10 minutes                     |
-| **Security Patterns**    | 3 critical patterns         | 18 comprehensive patterns        |
+| **Security Patterns**    | 3 critical patterns         | 13 comprehensive patterns        |
 | **Test Scenarios**       | 1 per tool                  | Multiple scenarios per tool      |
 | **Error Handling Tools** | First 3 tools               | All tools                        |
 | **MCP Spec Compliance**  | Not included                | Included (informational)         |
