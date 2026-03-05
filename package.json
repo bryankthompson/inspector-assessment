@@ -1,6 +1,6 @@
 {
   "name": "@bryan-thompson/inspector-assessment",
-  "version": "1.43.3",
+  "version": "1.43.4",
   "description": "Enhanced MCP Inspector with comprehensive assessment capabilities for server validation",
   "license": "MIT",
   "author": "Bryan Thompson <bryan@triepod.ai>",
@@ -89,10 +89,8 @@
   ],
   "scripts": {
     "build": "npm run build-server && npm run build-client && npm run build-cli",
-    "build:docker": "npm run build-server && npm run build-client:docker && npm run build-cli",
     "build-server": "cd server && npm run build",
     "build-client": "cd client && npm run build",
-    "build-client:docker": "docker run --rm -v \"$PWD\":/app -w /app/client node:22-slim sh -c 'npm install --prefer-offline 2>/dev/null; npm run build'",
     "build-cli": "cd cli && npm run build",
     "clean": "rimraf ./node_modules ./client/node_modules ./cli/node_modules ./build ./client/dist ./server/build ./cli/build ./package-lock.json && npm install",
     "dev": "node client/bin/start.js --dev",
