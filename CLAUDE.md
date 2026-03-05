@@ -14,19 +14,9 @@
 - Development mode: `npm run dev` (use `npm run dev:windows` on Windows)
 - Format code: `npm run prettier-fix`
 - Client lint: `cd client && npm run lint`
-- Run tests: `npm test` (~1560 tests passing)
-- Run assessment tests: `npm test -- assessment` (assessment module tests)
-- Run slow tests: `RUN_SLOW_TESTS=true npm test -- --testPathPattern="SecurityAssessor"` (security reflection tests)
-- Run performance tests: `RUN_PERF_TESTS=true npm test -- --testPathPattern="performance"` (performance benchmarks)
-
-## Structured Logging (v1.23.1)
-
-- **Log levels**: `silent`, `error`, `warn`, `info` (default), `debug`
-- **CLI flags**: `--verbose` (debug), `--silent`, `--log-level <level>`
-- **Environment**: `LOG_LEVEL=<level>` (precedence: CLI > ENV > default)
-- **Output**: Logger → stdout, JSONL events → stderr (preserved)
-- **Documentation**: [docs/LOGGING_GUIDE.md](docs/LOGGING_GUIDE.md)
-- **Implementation**: `client/src/services/assessment/lib/logger.ts`
+- Run tests: `npm test` (696 total, 669 passing, 27 timeout failures)
+- Run assessment tests: `npm test -- assessment` (208 assessment module tests)
+- Note: 27 test failures are SecurityAssessor timeout issues (480s limit), not logic errors
 
 ## Code Style Guidelines
 
@@ -56,61 +46,12 @@ The project is organized as a monorepo with workspaces:
 Run security assessments from the command line without the web UI:
 
 ```bash
-# Quick HTTP/SSE testing (no config file needed):
-npm run assess -- --server my-server --http http://localhost:10900/mcp
-npm run assess -- --server my-server --sse http://localhost:9002/sse
-
-# Config-based testing (for STDIO or complex setups):
+# Test all tools on a server
 npm run assess -- --server <server-name> --config <path-to-config.json>
 
 # Test specific tool
 npm run assess -- --server <server-name> --config <config.json> --tool <tool-name>
-
-# Single-module execution (fastest, bypasses orchestrator):
-npm run assess -- --server my-server --http http://localhost:10900/mcp --module toolAnnotations
-npm run assess:full -- --server my-server --sse http://localhost:9002/sse --module functionality
 ```
-
-**Transport Options:**
-
-- `--http <url>` - Quick HTTP transport (no config file needed)
-- `--sse <url>` - Quick SSE transport (no config file needed)
-- `--config <path>` - Load from JSON config file (required for STDIO)
-
-Note: `--http`, `--sse`, and `--config` are mutually exclusive.
-
-**Static Analysis Options (Issue #213):**
-
-- `--static-only` - Run only static analysis (no server connection required, requires `--source <path>`)
-- `--fallback-static` - Try runtime assessment first, fall back to static analysis on connection failure
-- `--source <path>` - Source code path for static analysis and AUP/portability assessments
-
-**Static-capable modules** (11 total):
-
-- manifestValidation, documentation, usability, prohibitedLibraries
-- portability, externalAPIScanner, fileModularization, conformance
-- toolAnnotations, authentication, aupCompliance
-
-**Runtime-only modules** (9 total):
-
-- functionality, security, temporal, protocolCompliance, resources
-- prompts, crossCapability, errorHandling, dependencyVulnerability
-
-```bash
-# Static-only assessment (no server needed)
-npm run assess:full -- --server my-server --source /path/to/code --static-only
-
-# Fallback mode (runtime first, static on failure)
-npm run assess:full -- --server my-server --config config.json --source /path/to/code --fallback-static
-```
-
-**Module Execution Options:**
-
-- `--module <name>` - Run single module directly (bypasses orchestrator, fastest execution)
-- Valid modules: functionality, security, temporal, protocolCompliance, aupCompliance, toolAnnotations, prohibitedLibraries, manifestValidation, authentication, resources, prompts, crossCapability, developerExperience, portability, externalAPIScanner, fileModularization, conformance
-- Note: `errorHandling` is deprecated (merged into `protocolCompliance` in Issue #188) but still accepted as an alias for backward compatibility
-- Mutual exclusivity: `--module` cannot be used with `--profile`, `--skip-modules`, or `--only-modules`
-- Output format: `/tmp/inspector-{module}-{server}.json` (e.g., `/tmp/inspector-functionality-my-server.json`)
 
 **Config File Format** (HTTP transport):
 
@@ -136,278 +77,86 @@ npm run assess:full -- --server my-server --config config.json --source /path/to
 - ✅ No modifications to core assessment modules (preserves upstream sync compatibility)
 - ✅ Supports stdio, HTTP, and SSE transports
 - ✅ Test all tools or specific tool
-- ✅ Claude semantic analysis with mcp-auditor (optional)
 - ✅ JSON output to `/tmp/inspector-assessment-{serverName}.json`
 - ✅ Exit code 0 for safe, 1 for vulnerabilities (perfect for CI/CD)
 
-**Claude Semantic Analysis:**
-
-Enable Claude to reduce false positives via semantic understanding (requires mcp-auditor running):
-
-```bash
-# Enable Claude semantic analysis
-npm run assess -- --server my-server --config config.json --claude
-
-# Custom mcp-auditor URL
-npm run assess -- --server my-server --config config.json --claude --mcp-auditor-url http://custom:8085
-
-# Via environment variables (useful for CI/CD)
-INSPECTOR_CLAUDE=true npm run assess -- --server my-server --config config.json
-INSPECTOR_MCP_AUDITOR_URL=http://custom:8085 npm run assess -- --server my-server --config config.json
-```
-
-**Claude Options:**
-
-- `--claude` - Enable Claude semantic analysis (requires mcp-auditor at http://localhost:8085 by default)
-- `--mcp-auditor-url <url>` - Custom mcp-auditor URL (default: http://localhost:8085)
-- `--stage-b-verbose` - Add evidence samples and confidence breakdowns to Stage B enrichment (Issue #137)
-- `INSPECTOR_CLAUDE=true` - Environment variable to enable Claude
-- `INSPECTOR_MCP_AUDITOR_URL` - Environment variable for custom URL
-
-**How It Works:** Pattern-based detection runs first. For medium/low confidence findings, Claude analyzes tool behavior semantically to reduce false positives.
-
 **Implementation:** `scripts/run-security-assessment.ts`
-
-**Complete Documentation:** See [docs/CLI_ASSESSMENT_GUIDE.md](docs/CLI_ASSESSMENT_GUIDE.md) for all three CLI modes, configuration options, and CI/CD integration examples.
-
-## Full Assessment CLI
-
-The full assessment is now unified under a single CLI binary (`cli/src/assess-full.ts`).
-
-**Usage** (local development and published package):
-
-```bash
-# Local development (requires npm run build-cli first)
-npm run assess:full -- --server <name> --config <path>
-
-# Published package
-npx @bryan-thompson/inspector-assessment mcp-assess-full <server> --config <path>
-```
-
-**Features**:
-
-- Resource/Prompt capability assessment
-- Pre-flight validation mode (`--preflight`)
-- Comparison/diff modes (`--compare`, `--diff-only`)
-- State management/resume (`--resume`, `--no-resume`)
-- Policy compliance reports (`--include-policy`)
-- Multiple output formats (`--format json|markdown`)
-
-**Legacy Script** (deprecated, will be removed):
-
-The old `scripts/run-full-assessment.ts` is available via `npm run assess:full:legacy` during the transition period. See [GitHub Issue #19](https://github.com/triepod-ai/inspector-assessment/issues/19) for details.
 
 ## Vulnerability Testbed Validation
 
-The inspector includes comprehensive A/B comparison validation using the vulnerable-mcp and hardened-mcp testbed servers.
+The inspector includes comprehensive validation using the broken-mcp/fixed-mcp vulnerability testbed servers.
 
-**Purpose**: Validate pure behavior-based detection logic with ground-truth labeled tools. Both servers use **IDENTICAL tool names** but different implementations to prove detection is behavior-based, not name-based.
-
-**Server Configuration**:
-
-| Server         | Port      | Description                                                      |
-| -------------- | --------- | ---------------------------------------------------------------- |
-| vulnerable-mcp | 10900     | 10 vulnerable + 6 safe tools                                     |
-| hardened-mcp   | 10901     | Same tool names, safe implementations                            |
-| test-server    | 10651     | General testing (not part of testbed)                            |
-| firecrawl      | 10777     | No credits - fails but testable                                  |
-| dvmcp          | 9001-9006 | Damn Vulnerable MCP (`~/mcp-servers/damn-vulnerable-mcp-server`) |
+**Purpose**: Validate pure behavior-based detection logic with ground-truth labeled tools (vulnerable vs safe).
 
 **Quick Usage**:
 
 ```bash
-# Run assessment against both servers
-npm run assess -- --server vulnerable-mcp --config /tmp/vulnerable-mcp-config.json
-npm run assess -- --server hardened-mcp --config /tmp/hardened-mcp-config.json
+# Run assessment against testbed (pure behavior detection)
+npm run assess -- --server broken-mcp --config /tmp/broken-mcp-config.json
 
-# Expected results (A/B comparison):
-# Vulnerable: 1440 tests, 200 vulnerabilities, FAIL
-# Hardened: 1440 tests, 0 vulnerabilities, PASS
-# Both: 0 false positives on 6 safe tools (100% precision)
+# Expected results:
+# - 374 tests executed
+# - 20 vulnerabilities detected
+# - 0 false positives on 6 safe tools (100% precision)
 ```
 
-**Testbed Configs**:
+**Testbed Config** (`/tmp/broken-mcp-config.json`):
 
 ```json
-// /tmp/vulnerable-mcp-config.json
-{"transport": "http", "url": "http://localhost:10900/mcp"}
-
-// /tmp/hardened-mcp-config.json
-{"transport": "http", "url": "http://localhost:10901/mcp"}
+{
+  "transport": "http",
+  "url": "http://localhost:10900/mcp"
+}
 ```
 
-**Validation Status** (2025-12-28):
+**Validation Status**:
 
-- ✅ A/B Detection Gap: 200 vulnerabilities (vulnerable) vs 0 (hardened) with identical tool names
-- ✅ Pure Behavior Detection: 100% precision (0 false positives on both servers)
-- ✅ 23 attack patterns tested per tool (expanded from 8)
-- ✅ Real HTTP tool calls verified inspector findings
+- ✅ Pure Behavior Detection: 100% precision (0 false positives on 6 safe tools)
+- ✅ 20 vulnerabilities detected across 10 vulnerable tools
+- ✅ Bugs found and fixed during validation (SAFE_STORAGE category, bidirectional reflection patterns)
 - ✅ Ready for production MCP server assessments
 
 **When to Use Testbed**:
 
-1. **Before Inspector Changes**: Run baseline on both servers
-2. **After Inspector Changes**: Verify A/B detection gap and 0 false positives
-3. **Before Release**: Full validation on both servers
+1. **Before Inspector Changes**: Run baseline assessment to record current behavior
+2. **After Inspector Changes**: Verify 0 false positives remain (100% precision)
+3. **Before Release**: Full validation on testbed
 4. **CI/CD Pipeline**: Automated regression testing
 
-**Key Insight**: Both servers have tools named `vulnerable_calculator_tool`, `vulnerable_system_exec_tool`, etc. The inspector detects 200 vulnerabilities on one server and 0 on the other - proving pure behavior-based detection, not name-based heuristics.
+**Key Insight**: Testbed tools include `vulnerable: true/false` flags for **human visual inspection only**. The inspector completely ignores these flags and uses pure behavior detection. This proves the inspector works correctly on real-world servers that don't have security metadata.
 
 **Validation Commands**:
 
 ```bash
-# A/B Comparison (should be ~400+ vs 0)
-cat /tmp/inspector-assessment-vulnerable-mcp.json | jq '.modules.security.vulnerabilities | length'
-# Expected: ~400+ (varies with test patterns)
-cat /tmp/inspector-assessment-hardened-mcp.json | jq '.modules.security.vulnerabilities | length'
+# Verify zero false positives (critical metric)
+cat /tmp/inspector-assessment-broken-mcp.json | \
+  jq '[.security.promptInjectionTests[] | select(.toolName | startswith("safe_")) | select(.vulnerable == true)] | length'
 # Expected: 0
 
-# Verify zero false positives on safe tools (both servers)
-cat /tmp/inspector-assessment-vulnerable-mcp.json | \
-  jq '[.modules.security.promptInjectionTests[] | select(.toolName | startswith("safe_")) | select(.vulnerable == true)] | length'
-# Expected: 0
+# Check total vulnerabilities detected
+cat /tmp/inspector-assessment-broken-mcp.json | jq '.security.vulnerabilities | length'
+# Expected: 20
 
-cat /tmp/inspector-assessment-hardened-mcp.json | \
-  jq '[.modules.security.promptInjectionTests[] | select(.toolName | startswith("safe_")) | select(.vulnerable == true)] | length'
-# Expected: 0
+# Compare before/after changes
+diff <(cat /tmp/baseline.json | jq '.security.vulnerabilities | length') \
+     <(cat /tmp/after.json | jq '.security.vulnerabilities | length')
 ```
 
 **Acceptance Criteria for Changes**:
 
-- ✅ False positives: 0 (both servers, safe tools)
+- ✅ False positives: 0/6 safe tools
 - ✅ Precision: 100%
-- ✅ Vulnerable server: ≥400 vulnerabilities (varies with test patterns)
-- ✅ Hardened server: 0 vulnerabilities (same tool names!)
+- ✅ Vulnerabilities detected ≥ previous version
 - ✅ No regressions in detection logic
 
-**Detailed Documentation**: See [docs/TESTBED_SETUP_GUIDE.md](docs/TESTBED_SETUP_GUIDE.md) for:
+**Detailed Documentation**: See [docs/mcp_vulnerability_testbed.md](docs/mcp_vulnerability_testbed.md) for:
 
-- Complete A/B comparison results
-- Real tool response evidence
+- Complete validation results
+- Bugs found and fixed during validation
 - Detection architecture explanation
 - Testbed configuration and usage
 - CI/CD integration examples
 - Performance benchmarks
-
-## DVMCP (Damn Vulnerable MCP) Testbed
-
-The inspector supports validation against the DVMCP CTF-style educational project with 10 intentionally vulnerable MCP servers.
-
-**Repository**:
-
-- **Fork**: https://github.com/triepod-ai/damn-vulnerable-MCP-server
-- **Upstream**: https://github.com/harishsg993010/damn-vulnerable-MCP-server
-- **Local Path**: `/home/bryan/mcp-servers/damn-vulnerable-mcp-server/`
-
-**Server Configuration**:
-
-| Challenge | Port | Vulnerability Class                    | Detection Status (v1.20.5)          |
-| --------- | ---- | -------------------------------------- | ----------------------------------- |
-| CH1       | 9001 | Prompt Injection via Resources         | GAP (resources not tested)          |
-| CH2       | 9002 | Tool Description Poisoning + Cmd Inj   | ✅ DETECTED (7 patterns)            |
-| CH3       | 9003 | Path Traversal / Excessive Permissions | ✅ DETECTED                         |
-| CH4       | 9004 | Rug Pull (Temporal Mutation)           | GAP (stateful pattern exemption)    |
-| CH5       | 9005 | Tool Shadowing                         | GAP (FastMCP compatibility)         |
-| CH6       | 9006 | Indirect Prompt Injection              | GAP                                 |
-| CH7       | 9007 | Token Theft via Info Disclosure        | ✅ DETECTED                         |
-| CH8       | 9008 | Arbitrary Code Execution               | Safe reflection                     |
-| CH9       | 9009 | Command Injection (RCE)                | ✅ DETECTED                         |
-| CH10      | 9010 | Multi-Vector Attack Chain              | ✅ DETECTED (3 patterns + 12 vulns) |
-
-**Important**: SSE servers (`server_sse.py`) have different tools than stdio servers (`server.py`). The poisoned descriptions are in `server.py` only.
-
-### Testing with Published npm Package
-
-**Config Files** (SSE transport - for servers already running):
-
-```json
-// /tmp/dvmcp-ch2-sse.json
-{ "transport": "sse", "url": "http://localhost:9002/sse" }
-```
-
-**Config Files** (STDIO transport - for poisoned description testing):
-
-```json
-// /tmp/dvmcp-ch2-stdio.json
-{
-  "command": "/home/bryan/mcp-servers/damn-vulnerable-mcp-server/.venv/bin/python",
-  "args": ["/tmp/run-ch2-stdio.py"]
-}
-```
-
-**STDIO Wrapper Script** (required for server.py which defaults to HTTP):
-
-```python
-# /tmp/run-ch2-stdio.py
-#!/usr/bin/env python
-import sys
-sys.path.insert(0, '/home/bryan/mcp-servers/damn-vulnerable-mcp-server/challenges/easy/challenge2')
-from server import mcp
-mcp.run(transport='stdio')
-```
-
-**Quick Usage with Published Package**:
-
-```bash
-# Install DVMCP dependencies first
-cd /home/bryan/mcp-servers/damn-vulnerable-mcp-server
-uv venv .venv && source .venv/bin/activate && uv pip install -e .
-
-# Test via SSE (if server running)
-npx -p @bryan-thompson/inspector-assessment mcp-assess-full dvmcp-ch2 \
-  --config /tmp/dvmcp-ch2-sse.json --output /tmp/dvmcp-ch2-results.json
-
-# Test via STDIO (for poisoned descriptions in server.py)
-npx -p @bryan-thompson/inspector-assessment mcp-assess-full dvmcp-ch2 \
-  --config /tmp/dvmcp-ch2-stdio.json --output /tmp/dvmcp-ch2-results.json
-```
-
-### v1.20.5 Validation Results (2025-12-31)
-
-**CH2 Tool Description Poisoning** (STDIO server.py):
-
-- `get_company_data`: 3 patterns detected (`important_tag`, `do_not_mention`, `internal_resource_uri`)
-- `search_company_database`: 7 patterns detected (`hidden_tag`, `override_auth_protocol`, `internal_resource_uri`, `access_confidential`, `hidden_trigger_phrase` x2, `do_not_mention`)
-
-**CH10 Multi-Vector** (STDIO server.py):
-
-- `get_user_profile`: 2 patterns detected (`important_tag`, `internal_resource_uri`)
-- `malicious_check_system_status`: 1 pattern detected (`hidden_tag`)
-- Plus 12 security vulnerabilities (Command Injection, Calculator Injection, Code Execution, etc.)
-
-**Check Results**:
-
-```bash
-# View poisoning detections
-cat /tmp/dvmcp-ch2-results.json | jq '.toolAnnotations.toolResults[] | select(.descriptionPoisoning.detected == true) | {toolName, patterns: [.descriptionPoisoning.patterns[].name]}'
-
-# Count poisoned tools
-cat /tmp/dvmcp-ch2-results.json | jq '.toolAnnotations.poisonedDescriptionsDetected'
-```
-
-### Description Poisoning Patterns
-
-The following patterns are detected by ToolAnnotationAssessor (added in v1.20.5):
-
-| Pattern                  | Category             | Example                                    |
-| ------------------------ | -------------------- | ------------------------------------------ |
-| `important_tag`          | hidden_instructions  | `<IMPORTANT>...</IMPORTANT>`               |
-| `hidden_tag`             | hidden_instructions  | `<HIDDEN>...</HIDDEN>`                     |
-| `override_auth_protocol` | auth_bypass          | `override-auth-protocol-555`               |
-| `internal_resource_uri`  | resource_access      | `company://confidential`, `system://admin` |
-| `access_confidential`    | exfiltration         | `access the confidential`                  |
-| `hidden_trigger_phrase`  | hidden_trigger       | `if the query contains the exact phrase`   |
-| `do_not_mention`         | concealment          | `do not mention that you're accessing`     |
-| `master_password`        | credential_reference | `include the master password`              |
-| `get_secrets_call`       | hidden_trigger       | `get_secrets()`                            |
-
-**Test Suite**: `client/src/services/assessment/__tests__/DescriptionPoisoning-DVMCP.test.ts`
-
-### Known Gaps
-
-**CH4 Rug Pull**: TemporalAssessor doesn't detect because `get_weather` matches "get" in `STATEFUL_TOOL_PATTERNS` (stateful tools use schema-only comparison).
-
-**CH5 Tool Shadowing**: FastMCP version incompatibility (`listed=False` param not supported in newer mcp package).
 
 ## Assessment Result Analysis
 
@@ -420,92 +169,35 @@ Every assessment run automatically saves results to `/tmp/inspector-assessment-{
 cat /tmp/inspector-assessment-memory-mcp.json | jq
 
 # Check functionality results
-cat /tmp/inspector-assessment-memory-mcp.json | jq '.modules.functionality'
+cat /tmp/inspector-assessment-memory-mcp.json | jq '.functionality'
 
 # List broken tools
-cat /tmp/inspector-assessment-memory-mcp.json | jq '.modules.functionality.brokenTools[]'
+cat /tmp/inspector-assessment-memory-mcp.json | jq '.functionality.brokenTools[]'
 
 # Get specific tool details
-cat /tmp/inspector-assessment-memory-mcp.json | jq '.modules.functionality.enhancedResults[] | select(.toolName == "tool_name")'
+cat /tmp/inspector-assessment-memory-mcp.json | jq '.functionality.enhancedResults[] | select(.toolName == "tool_name")'
 
 # See all tools and their status
-cat /tmp/inspector-assessment-memory-mcp.json | jq '.modules.functionality.enhancedResults[] | {tool: .toolName, status: .overallStatus}'
+cat /tmp/inspector-assessment-memory-mcp.json | jq '.functionality.enhancedResults[] | {tool: .toolName, status: .overallStatus}'
 
 # Get security vulnerabilities
-cat /tmp/inspector-assessment-memory-mcp.json | jq '.modules.security.vulnerabilities'
+cat /tmp/inspector-assessment-memory-mcp.json | jq '.security.vulnerabilities'
 
-# Check protocol compliance metrics (includes error handling)
-cat /tmp/inspector-assessment-memory-mcp.json | jq '.modules.protocolCompliance'
+# Check error handling metrics
+cat /tmp/inspector-assessment-memory-mcp.json | jq '.errorHandling.metrics'
 ```
 
 ## Feature Documentation
 
-For detailed documentation on specific features:
+For detailed documentation on specific features, see:
 
-**Documentation Index**: [docs/README.md](docs/README.md) - Complete navigation hub for all documentation
-
-### Core Documentation
-
-- **Assessment Catalog**: [docs/ASSESSMENT_CATALOG.md](docs/ASSESSMENT_CATALOG.md) - Complete assessment module reference with tier organization
-- **Architecture & Value**: [docs/ARCHITECTURE_AND_VALUE.md](docs/ARCHITECTURE_AND_VALUE.md) - What inspector-assessment provides and why
-
-### JSONL Events API
-
-- **Event Reference**: [docs/JSONL_EVENTS_REFERENCE.md](docs/JSONL_EVENTS_REFERENCE.md) - All 13 event types and schema definitions
-- **Algorithms**: [docs/JSONL_EVENTS_ALGORITHMS.md](docs/JSONL_EVENTS_ALGORITHMS.md) - EventBatcher and AUP enrichment
-- **Integration**: [docs/JSONL_EVENTS_INTEGRATION.md](docs/JSONL_EVENTS_INTEGRATION.md) - Lifecycle examples, checklist, testing
-
-**Schema Versioning (Issue #108):**
-
-All events extend `BaseEvent` interface with `version` and `schemaVersion` fields. The `SCHEMA_VERSION` constant is maintained in `/client/src/lib/moduleScoring.ts` (single source of truth) and imported by CLI and orchestration modules. Increment `SCHEMA_VERSION` when event structure changes. See BaseEvent Interface section in JSONL_EVENTS_REFERENCE.md for details.
-
-### Test Data Generation
-
-- **Architecture**: [docs/TEST_DATA_ARCHITECTURE.md](docs/TEST_DATA_ARCHITECTURE.md) - Core architecture, field handlers, boundaries
-- **Scenarios**: [docs/TEST_DATA_SCENARIOS.md](docs/TEST_DATA_SCENARIOS.md) - Scenario categories, tool-aware generation
-- **Extension**: [docs/TEST_DATA_EXTENSION.md](docs/TEST_DATA_EXTENSION.md) - Adding handlers, debugging, integration
-
-### Response Validation
-
-- **Core**: [docs/RESPONSE_VALIDATION_CORE.md](docs/RESPONSE_VALIDATION_CORE.md) - Validation logic, business error detection
-- **Extension**: [docs/RESPONSE_VALIDATION_EXTENSION.md](docs/RESPONSE_VALIDATION_EXTENSION.md) - Adding rules, troubleshooting, API reference
-
-### Developer Guides
-
-- **Assessment Module Guide**: [docs/ASSESSMENT_MODULE_DEVELOPER_GUIDE.md](docs/ASSESSMENT_MODULE_DEVELOPER_GUIDE.md) - Creating and extending assessment modules
-- **Scoring Algorithm**: [docs/SCORING_ALGORITHM_GUIDE.md](docs/SCORING_ALGORITHM_GUIDE.md) - Module weights, thresholds, calculations
-- **Progressive Complexity**: [docs/PROGRESSIVE_COMPLEXITY_GUIDE.md](docs/PROGRESSIVE_COMPLEXITY_GUIDE.md) - 2-level testing approach
-
-### Security Testing
-
-- **Security Patterns Catalog**: [docs/SECURITY_PATTERNS_CATALOG.md](docs/SECURITY_PATTERNS_CATALOG.md) - Comprehensive attack patterns and payloads
-- **Testbed Setup**: [docs/TESTBED_SETUP_GUIDE.md](docs/TESTBED_SETUP_GUIDE.md) - A/B validation with vulnerable-mcp/hardened-mcp
-- **DVMCP Usage Guide**: [docs/DVMCP_USAGE_GUIDE.md](docs/DVMCP_USAGE_GUIDE.md) - Damn Vulnerable MCP testbed
-- **Security Audits**: [docs/security/](docs/security/) - Security audit reports
-
-### CLI & Operations
-
-- **CLI Assessment Guide**: [docs/CLI_ASSESSMENT_GUIDE.md](docs/CLI_ASSESSMENT_GUIDE.md) - Complete CLI modes comparison
-- **Upstream Sync Workflow**: [docs/UPSTREAM_SYNC_WORKFLOW.md](docs/UPSTREAM_SYNC_WORKFLOW.md) - Sync procedure with upstream
-
-### Base Inspector Reference
-
-- **Base Inspector Guide**: [docs/BASE_INSPECTOR_GUIDE.md](docs/BASE_INSPECTOR_GUIDE.md) - UI operation, Docker, auth, transports, config
-- **Fork History**: [docs/FORK_HISTORY.md](docs/FORK_HISTORY.md) - Upstream relationship, sync status, what we added
-
-### Specification & UI
-
-- **Manifest Requirements**: [docs/MANIFEST_REQUIREMENTS.md](docs/MANIFEST_REQUIREMENTS.md) - manifest_version 0.3 spec
-- **UI Component Reference**: [docs/UI_COMPONENT_REFERENCE.md](docs/UI_COMPONENT_REFERENCE.md) - Assessment UI architecture
-
-### Related Projects
-
-- **mcp-auditor**: See `../mcp-auditor/docs/` for auditor CLI usage (audit.js, stage-ab-compare.js) and Inspector integration docs
-
-### Legacy References
-
-- **Functionality Testing**: [README.md](README.md#assessment-modules-18-total) - Assessment modules overview
-- **Security Assessment**: [README.md](README.md#security-testing-pure-behavior-detection) - Pure behavior-based security testing
+- **Reviewer Quick Start**: [docs/REVIEWER_QUICK_START.md](docs/REVIEWER_QUICK_START.md) - Fast-track guide for MCP directory reviewers (60-second screening + 5-minute detailed review)
+- **Assessment Methodology**: [docs/ASSESSMENT_METHODOLOGY.md](docs/ASSESSMENT_METHODOLOGY.md)
+- **Functionality Testing**: [README.md](README.md#2-optimized-progressive-complexity-testing) - Multi-scenario validation, progressive complexity
+- **Security Assessment**: [README.md](README.md#4-context-aware-security-assessment-with-zero-false-positives) - Domain-specific patterns, zero false positives
+- **Error Handling**: [README.md](README.md#assessment-categories) - MCP protocol compliance, validation quality
+- **MCP Spec Reference**: [docs/mcp_spec_11-2025.md](docs/mcp_spec_11-2025.md) - Protocol revision 2025-11-25 (latest)
+- **MCP Spec Compliance**: See PROJECT_STATUS.md timeline for latest enhancements
 - **Recent Changes**: [PROJECT_STATUS.md](PROJECT_STATUS.md#development-timeline---october-2025)
 
 ## Key Technical Implementations
@@ -515,21 +207,20 @@ All events extend `BaseEvent` interface with `version` and `schemaVersion` field
 - `client/src/services/assessment/TestScenarioEngine.ts` - Multi-scenario testing orchestration
 - `client/src/services/assessment/ResponseValidator.ts` - Business logic error detection
 - `client/src/services/assessment/TestDataGenerator.ts` - Context-aware test data
-- `client/src/services/assessment/testdata/` - Test data constants (realistic values, tool categories)
 - `client/src/services/assessment/modules/SecurityAssessor.ts` - Domain-specific security testing
-- `client/src/services/assessment/modules/ProtocolComplianceAssessor/` - Unified protocol compliance (includes error handling, Issue #188)
+- `client/src/services/assessment/modules/ErrorHandlingAssessor.ts` - MCP protocol compliance
+- `client/src/services/assessment/modules/MCPSpecComplianceAssessor.ts` - Hybrid protocol checks
 
 **UI Components:**
 
+- `client/src/components/AssessmentTab.tsx` - Main assessment interface
+- `client/src/components/ExtendedAssessmentCategories.tsx` - Assessment results display
 - `client/src/components/ui/tool-selector.tsx` - Multi-select tool picker for error handling
-
-> **Note**: Assessment Tab UI was deprecated in v1.23.0. Assessment functionality is now CLI-only via `mcp-assess-full` and `mcp-assess-security` commands.
 
 **Testing:**
 
-- `client/src/services/__tests__/` - Service layer tests
-- `client/src/services/assessment/__tests__/` - Assessment module tests
-- Total: ~1560 tests across 66 test suites
+- `client/src/services/__tests__/` - 696 total tests (669 passing, 27 timeout failures)
+- `client/src/services/assessment/__tests__/` - 208 assessment module tests
 
 ## Development Workflow
 
@@ -654,63 +345,11 @@ This file contains archived project timeline entries from earlier development ph
 
 **Note**: Always add new timeline entries BEFORE performing archival. Archival is a maintenance task, not a development task.
 
-## Documentation Maintenance Guidelines
-
-### File Size Thresholds
-
-**When to split**: Documentation files exceeding ~1000 lines should be split into focused documents.
-
-**Target size**: Each split file should be 400-650 lines for optimal readability and Claude context efficiency.
-
-### Split Strategy
-
-1. **Identify logical sections**: Group related content (e.g., core vs extension, reference vs examples)
-2. **Create focused files**: Name clearly (e.g., `GUIDE_CORE.md`, `GUIDE_EXTENSION.md`)
-3. **Add series navigation**: Each split file should have a header linking to related files:
-   ```markdown
-   > **Part of the [Topic] documentation series:**
-   >
-   > - **Core** (this document) - Description
-   > - [Extension](GUIDE_EXTENSION.md) - Description
-   ```
-
-### Backwards Compatibility
-
-**Convert original files to redirect pages** - Don't delete, redirect:
-
-```markdown
-# [Original Title]
-
-> **Note**: This guide has been split into focused documents for easier navigation.
-
-## Quick Links
-
-- [Document 1](link) - Description
-- [Document 2](link) - Description
-
----
-
-_For the complete documentation index, see [docs/README.md](README.md)._
-```
-
-### Navigation Hub
-
-**Maintain `docs/README.md`** as the central navigation hub:
-
-- Update when adding/splitting documentation
-- Organize by category (Core, Security, CLI, etc.)
-- Use tables for quick scanning
-
-### Consistency Standards
-
-- **Overview section**: All major docs should have an Overview section after the title
-- **Table of Contents**: Files >500 lines should have a TOC
-- **Related Documentation**: End files with links to related docs
-
 ## npm Package Publishing & Maintenance
 
 **Package**: `@bryan-thompson/inspector-assessment`
-**Current Version**: 1.24.2
+**Current Version**: 1.0.1
+**Published**: 2025-10-11 (v1.0.0), 2025-10-11 (v1.0.1)
 **Registry**: https://www.npmjs.com/package/@bryan-thompson/inspector-assessment
 
 ### Quick Publish Workflow
@@ -718,29 +357,30 @@ _For the complete documentation index, see [docs/README.md](README.md)._
 When making changes that should be published to npm:
 
 ```bash
-# 1. Ensure clean git state (required for npm version)
-git status  # Should show no uncommitted changes to tracked files
-
-# 2. Format all files (catches new docs that would fail prettier-check)
-npm run prettier-fix
-git add . && git commit -m "style: format files"  # If any changes
-
-# 3. Bump version (workspaces sync automatically via lifecycle hook!)
+# 1. Update version (semantic versioning)
 npm version patch   # Bug fixes: 1.0.0 -> 1.0.1
 npm version minor   # New features: 1.0.0 -> 1.1.0
 npm version major   # Breaking changes: 1.0.0 -> 2.0.0
 
+# 2. Update CHANGELOG.md with changes
+
+# 3. Build and format
+npm run build
+npm run prettier-fix
+
 # 4. Publish all packages (workspaces + root)
 npm run publish-all
+# This runs: npm publish --workspaces --access public && npm publish --access public
 
-# 5. Push to origin with tags
+# 5. Test the published package
+bunx @bryan-thompson/inspector-assessment
+
+# 6. Commit and tag
+git add .
+git commit -m "chore: release v1.0.x"
+git tag v1.0.x
 git push origin main --tags
-
-# 6. Verify published package
-bunx @bryan-thompson/inspector-assessment --help
 ```
-
-**Note**: The `npm version` command automatically syncs all workspace versions via the `version` lifecycle script in package.json. No manual workspace syncing needed!
 
 ### Publishing Commands Reference
 
@@ -802,68 +442,6 @@ The npm package consists of 4 published packages:
 
 All four must be published for the package to work correctly.
 
-### Workspace Architecture (Critical)
-
-**Why workspace packages are NOT listed as npm dependencies:**
-
-The root package bundles workspace code via the `files` array, NOT npm dependencies. This is a critical architectural decision:
-
-```json
-// CORRECT - workspace content is bundled via files array
-"files": [
-  "client/bin",
-  "client/dist",
-  "server/build",
-  "cli/build"
-]
-
-// WRONG - DO NOT add workspace packages as dependencies
-"dependencies": {
-  "@bryan-thompson/inspector-assessment-cli": "^1.22.6"  // NEVER DO THIS
-}
-```
-
-**Why this matters:**
-
-1. When users run `npx @bryan-thompson/inspector-assessment`, npm resolves dependencies from the registry
-2. If workspace packages are listed as deps with version `^X.Y.Z`, npm tries to fetch that exact version
-3. If versions mismatch (e.g., workspaces at 1.22.5 but deps require ^1.22.6), installation fails with ETARGET
-4. The `files` array physically includes the workspace builds in the tarball - no npm resolution needed
-
-**Safeguards in place:**
-
-- `npm run validate:publish` - Manual validation script
-- `prepublishOnly` hook - Runs validation automatically before publish
-- `package-structure.test.ts` - Unit test that fails if workspace deps found
-- `.github/workflows/verify-publish.yml` - Post-publish CI verification
-
-**If you see ETARGET errors during `npx` installation:**
-
-1. Check `package.json` for workspace packages in dependencies
-2. Remove any `@bryan-thompson/inspector-assessment-*` entries
-3. Run `npm run validate:publish` to verify the fix
-
-### Monorepo Publishing Gotchas
-
-**Automated as of v1.17.1:**
-
-1. **Workspace Version Sync** (Now Automated!)
-   - ~~`npm version patch` only bumps the root package version~~
-   - **Fixed**: The `version` lifecycle script in package.json now automatically syncs all workspace versions
-   - Script: `scripts/sync-workspace-versions.js`
-   - Just run `npm version patch` - everything syncs automatically!
-
-**Still requires attention:**
-
-2. **Prettier Formatting**
-   - New files (especially docs) must be formatted before commit
-   - `npm test` runs `prettier-check` first and fails if files aren't formatted
-   - **Fix**: Run `npm run prettier-fix` before committing new files
-
-3. **Clean Git Directory**
-   - `npm version` fails if working directory has uncommitted changes
-   - **Fix**: Commit or stash changes before running `npm version`
-
 ### Testing Published Package
 
 ```bash
@@ -918,44 +496,13 @@ If Anthropic adopts this package, it can be migrated to `@modelcontextprotocol/i
 2. Publish to new namespace
 3. Deprecate old packages with migration notice
 
+See [PUBLISHING_GUIDE.md](PUBLISHING_GUIDE.md) for detailed publishing documentation.
+
 ## Upstream Sync Status
 
-- **Current Version**: 0.18.0
-- **Last Sync**: 2025-12-23 (synced from v0.17.5 to v0.18.0)
+- **Current Version**: 0.17.5
+- **Last Sync**: 2025-12-07 (270+ commits from v0.17.0, synced to v0.17.5)
 - **Fork**: triepod-ai/inspector-assessment
 - **Upstream**: modelcontextprotocol/inspector
-- **Integration Doc**: [docs/UPSTREAM_SYNC_WORKFLOW.md](docs/UPSTREAM_SYNC_WORKFLOW.md) - Comprehensive sync procedure (35K)
 - See [PROJECT_STATUS.md](PROJECT_STATUS.md) for sync history
-
-### Upstream Sync Helper Script
-
-Use the automated sync script for guided upstream syncing:
-
-```bash
-# Check status and view upstream changes (safe, read-only)
-npm run sync:upstream
-
-# Individual commands
-./scripts/sync-upstream.sh status    # Show sync status and divergence
-./scripts/sync-upstream.sh diff      # View upstream changes to App.tsx
-./scripts/sync-upstream.sh merge     # Attempt merge with conflict guidance
-./scripts/sync-upstream.sh validate  # Build and test after merge
-```
-
-**What the script does:**
-
-- Fetches upstream and shows how many commits behind/ahead
-- Highlights if upstream changes affect our integration lines in App.tsx
-- Provides merge conflict resolution guidance referencing UPSTREAM_SYNC.md
-- Prompts to update UPSTREAM_SYNC.md with new version info after successful merge
-
-**Integration Architecture:**
-
-Assessment functionality is CLI-only (v1.23.0+):
-
-- **No UI integration points** - Assessment Tab UI was deprecated
-- **CLI tools**: `mcp-assess-full` and `mcp-assess-security` are the primary interfaces
-- **~160k lines** of assessment code in dedicated directories (no upstream conflicts)
-- **npm package**: Assessment modules exported for programmatic use via `@bryan-thompson/inspector-assessment`
-
-See [docs/UPSTREAM_SYNC_WORKFLOW.md](docs/UPSTREAM_SYNC_WORKFLOW.md) for sync workflow documentation.
+- **Note**: Upstream created [AGENTS.md](AGENTS.md) for basic development guide
