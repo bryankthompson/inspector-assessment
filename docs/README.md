@@ -47,6 +47,14 @@ Integration documentation for using the npm package programmatically.
 | [Assessment Module Developer Guide](ASSESSMENT_MODULE_DEVELOPER_GUIDE.md)     | Creating and extending assessment modules                    |
 | [Scoring Algorithm Guide](SCORING_ALGORITHM_GUIDE.md)                         | Module weights, thresholds, calculations                     |
 | [Protocol Conformance Assessor Guide](PROTOCOL_CONFORMANCE_ASSESSOR_GUIDE.md) | Module #18: Protocol compliance, event emission, integration |
+| [Assessment Modules API](ASSESSMENT_MODULES_API.md)                           | Module API surface and interfaces                            |
+| [Assessment Modules Integration](ASSESSMENT_MODULES_INTEGRATION.md)           | Integrating modules into the orchestrator                    |
+
+### Error Handling
+
+| Document                                                    | Purpose                                    |
+| ----------------------------------------------------------- | ------------------------------------------ |
+| [Error Handling Conventions](ERROR_HANDLING_CONVENTIONS.md) | Error handling patterns and MCP compliance |
 
 ### Test Data Generation
 
@@ -85,10 +93,13 @@ Integration documentation for using the npm package programmatically.
 
 ### Testing
 
-| Document                                                  | Purpose                                  |
-| --------------------------------------------------------- | ---------------------------------------- |
-| [Test Utilities Reference](TEST_UTILITIES_REFERENCE.md)   | Mock factory API for assessment testing  |
-| [Test Organization Pattern](TEST_ORGANIZATION_PATTERN.md) | Split test file conventions and patterns |
+| Document                                                                     | Purpose                                       |
+| ---------------------------------------------------------------------------- | --------------------------------------------- |
+| [Test Utilities Reference](TEST_UTILITIES_REFERENCE.md)                      | Mock factory API for assessment testing       |
+| [Test Organization Pattern](TEST_ORGANIZATION_PATTERN.md)                    | Split test file conventions and patterns      |
+| [Test Automation Strategy (Issue #57)](TEST_AUTOMATION_STRATEGY_ISSUE_57.md) | Strategy for automated test generation        |
+| [Test Automation Implementation](TEST_AUTOMATION_IMPLEMENTATION_SUMMARY.md)  | Implementation summary for test automation    |
+| [Bug Discovery Report (Issue #57)](BUG_DISCOVERY_REPORT_ISSUE_57.md)         | Bugs found during test automation development |
 
 ### Lessons Learned
 
@@ -132,7 +143,7 @@ Real-time progress streaming for CLI/auditor integration.
 | --------------------------------------------------- | ---------------------------------- |
 | [UI Component Reference](UI_COMPONENT_REFERENCE.md) | Assessment UI architecture         |
 | [Manifest Requirements](MANIFEST_REQUIREMENTS.md)   | manifest_version 0.3 specification |
-| [MCP Spec Reference](mcp_spec_06-2025.md)           | MCP specification notes            |
+| [MCP Spec Reference](mcp_spec_11-2025.md)           | MCP protocol revision 2025-11-25   |
 
 ---
 
@@ -148,12 +159,32 @@ Start with [Deprecation Index](DEPRECATION_INDEX.md) for navigation, then choose
 | [Deprecation Guide](DEPRECATION_GUIDE.md)                           | What's deprecated, why, and migration timeline |
 | [Deprecation API Reference](DEPRECATION_API_REFERENCE.md)           | Technical reference, warning formats, testing  |
 | [Deprecation Migration Examples](DEPRECATION_MIGRATION_EXAMPLES.md) | Copy-paste ready code examples                 |
+| [Deprecation Removal Checklist](DEPRECATION_REMOVAL_CHECKLIST.md)   | Checklist for removing deprecated code         |
 
 ### General Maintenance
 
 | Document                                            | Purpose                                |
 | --------------------------------------------------- | -------------------------------------- |
 | [Upstream Sync Workflow](UPSTREAM_SYNC_WORKFLOW.md) | Sync procedure with upstream inspector |
+
+---
+
+## Security Practices
+
+### Docker Isolation
+
+- **`build-client:docker`** (package.json): Uses `docker run --rm -v ... node:22-slim` to build the Vite client. Required because macOS sandbox kills unsigned native binaries (esbuild, rollup). The container is ephemeral (`--rm`), uses a volume mount for build artifacts, and runs no privileged operations.
+- **`assess-dvmcp-all.sh`**: Runs the DVMCP (Damn Vulnerable MCP) testbed in a Docker container with port mapping. Docker provides network and filesystem isolation for the intentionally vulnerable server. The container is user-managed (`docker run -d`).
+
+### Credential Handling
+
+- **GitHub Actions** (`.github/actions/code-review/`): Uses `ANTHROPIC_API_KEY` and `GITHUB_TOKEN` via GitHub Actions secrets. These are injected as environment variables, never logged, and scoped to the workflow run.
+- **CLI credential filtering** (`cli/src/cli.ts`): The CLI filters environment variables matching `_API_KEY`, `_SECRET`, `_TOKEN`, `_PASSWORD`, `_CREDENTIAL` suffixes before passing env to child processes. This prevents accidental credential leakage to MCP server subprocesses.
+
+### External Code Execution
+
+- Assessment tools connect to MCP servers but do not execute server code directly. Server processes are started externally (by the user or CI) before the inspector connects.
+- `npm install` in scripts (`update-version.js`) runs against the local project only, not external code.
 
 ---
 
@@ -234,9 +265,17 @@ docs/
 ├── DEPRECATION_MIGRATION_EXAMPLES.md       # Migration code examples
 ├── UPSTREAM_SYNC_WORKFLOW.md               # Upstream sync
 ├── ARCHITECTURE_AND_VALUE.md               # Architecture overview
+├── ASSESSMENT_MODULES_API.md              # Module API surface
+├── ASSESSMENT_MODULES_INTEGRATION.md      # Module integration
+├── ERROR_HANDLING_CONVENTIONS.md          # Error handling patterns
+├── BUG_DISCOVERY_REPORT_ISSUE_57.md       # Bug discovery from #57
+├── TEST_AUTOMATION_STRATEGY_ISSUE_57.md   # Test automation strategy
+├── TEST_AUTOMATION_IMPLEMENTATION_SUMMARY.md # Test automation impl
+├── DEPRECATION_REMOVAL_CHECKLIST.md       # Deprecation removal steps
+├── mcp_spec_11-2025.md                    # MCP spec rev 2025-11-25
 └── REAL_TIME_PROGRESS_OUTPUT.md            # Legacy progress
 ```
 
 ---
 
-**Last Updated**: 2026-01-17
+**Last Updated**: 2026-03-05

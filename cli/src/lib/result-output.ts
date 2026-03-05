@@ -415,6 +415,34 @@ export function displaySummary(results: MCPDirectoryAssessment): void {
     }
   }
 
+  // Audit mode summary
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const auditAnalysis = (security as any)?.auditAnalysis;
+  if (auditAnalysis) {
+    console.log("\n🔍 AUDIT ANALYSIS (reduced false positives):");
+    if (auditAnalysis.highConfidenceVulnerabilities?.length > 0) {
+      console.log(
+        `   🚨 High-confidence vulnerabilities: ${auditAnalysis.highConfidenceVulnerabilities.length}`,
+      );
+      for (const vuln of auditAnalysis.highConfidenceVulnerabilities.slice(
+        0,
+        5,
+      )) {
+        console.log(`      • ${vuln}`);
+      }
+    } else {
+      console.log("   ✅ No high-confidence vulnerabilities detected");
+    }
+    if (auditAnalysis.needsReview?.length > 0) {
+      console.log(
+        `   ⚠️  Needs manual review: ${auditAnalysis.needsReview.length}`,
+      );
+      for (const item of auditAnalysis.needsReview.slice(0, 3)) {
+        console.log(`      • ${item}`);
+      }
+    }
+  }
+
   console.log("\n" + "=".repeat(70));
 }
 

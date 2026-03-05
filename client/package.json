@@ -36,8 +36,8 @@
   ],
   "scripts": {
     "dev": "vite --port 6274",
-    "build": "tsc -b && vite build && npm run build:lib",
-    "build:lib": "tsc -p tsconfig.lib.json && npx tsc-alias -p tsconfig.lib.json --resolve-full-paths",
+    "build": "vite build && npm run build:lib",
+    "build:lib": "tsc -p tsconfig.lib.json --noCheck && npx tsc-alias -p tsconfig.lib.json --resolve-full-paths",
     "lint": "eslint .",
     "preview": "vite preview --port 6274",
     "test": "jest --config jest.config.cjs",

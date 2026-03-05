@@ -61,6 +61,9 @@ export interface SecurityTestersConfig {
 
   /** Timeout execution wrapper from BaseAssessor */
   executeWithTimeout: <T>(promise: Promise<T>, timeout: number) => Promise<T>;
+
+  /** Transport type for context-aware test skipping */
+  transportType?: "stdio" | "http" | "sse";
 }
 
 /**
@@ -92,6 +95,7 @@ export function createSecurityTesters(
     maxParallelTests: assessmentConfig.maxParallelTests,
     securityTestTimeout: assessmentConfig.securityTestTimeout,
     selectedToolsForTesting: assessmentConfig.selectedToolsForTesting,
+    transportType: factoryConfig.transportType,
   };
 
   return {

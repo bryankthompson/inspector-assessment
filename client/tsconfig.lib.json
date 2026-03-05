@@ -23,6 +23,9 @@
     "src/lib/aupPatterns.ts",
     "src/lib/policyMapping.ts",
     "src/lib/nativeModules.ts",
+    "src/lib/securityPatterns.ts",
+    "src/lib/moduleScoring.ts",
+    "src/lib/assessmentDiffer.ts",
     "src/lib/reportFormatters/**/*.ts",
     "src/lib/assessment/**/*.ts"
   ],

@@ -87,7 +87,7 @@ export interface AssessmentOptions {
   skipTemporal?: boolean;
   skipModules?: string[];
   onlyModules?: string[];
-  /** Assessment profile (quick, security, compliance, full, dev) */
+  /** Assessment profile (quick, security, compliance, full, dev, audit) */
   profile?: AssessmentProfileName;
   /** Log level for diagnostic output */
   logLevel?: LogLevel;
@@ -111,6 +111,8 @@ export interface AssessmentOptions {
   staticOnly?: boolean;
   /** Try runtime assessment, fall back to static on failure (Issue #213) */
   fallbackStatic?: boolean;
+  /** Audit mode for reduced false positives in automated MCP auditing */
+  auditMode?: boolean;
 }
 
 /**
@@ -468,6 +470,11 @@ export function parseArgs(argv?: string[]): AssessmentOptions {
         // Issue #137: Stage B enrichment for Claude semantic analysis
         options.stageBVerbose = true;
         break;
+      case "--audit-mode":
+        // Reduced false positives for automated MCP auditing
+        options.auditMode = true;
+        options.profile = "audit";
+        break;
       case "--static-only":
         // Issue #213: Static-only assessment without server connection
         options.staticOnly = true;
@@ -579,6 +586,16 @@ export function parseArgs(argv?: string[]): AssessmentOptions {
   if (options.skipModules?.length && options.onlyModules?.length) {
     console.error(
       "Error: --skip-modules and --only-modules are mutually exclusive",
+    );
+    setTimeout(() => process.exit(1), 10);
+    options.helpRequested = true;
+    return options as AssessmentOptions;
+  }
+
+  // Validate mutual exclusivity of --audit-mode with --profile (audit-mode sets profile internally)
+  if (options.auditMode && options.profile && options.profile !== "audit") {
+    console.error(
+      "Error: --audit-mode cannot be used with --profile (audit mode sets its own profile)",
     );
     setTimeout(() => process.exit(1), 10);
     options.helpRequested = true;
@@ -750,7 +767,8 @@ Options:
   --claude-http          Enable Claude Code via HTTP transport (connects to mcp-auditor proxy)
   --mcp-auditor-url <url>  mcp-auditor URL for HTTP transport (default: http://localhost:8085)
   --full                 Enable all assessment modules (default)
-  --profile <name>       Use predefined module profile (quick, security, compliance, full, dev)
+  --audit-mode           Reduced false positives for automated MCP auditing (sets --profile audit)
+  --profile <name>       Use predefined module profile (quick, security, compliance, full, dev, audit)
   --temporal-invocations <n>  Number of invocations per tool for rug pull detection (default: 3)
   --skip-temporal        Skip temporal/rug pull testing (faster assessment)
   --conformance          Enable official MCP conformance tests (experimental, requires HTTP/SSE transport)
