@@ -162,6 +162,11 @@ export class SecurityAssessor extends BaseAssessor {
       context.toolAnnotationsContext,
     );
 
+    // Pass transport type for context-aware test skipping (FP reduction)
+    if (context.transportType) {
+      this.testers.payloadTester.setTransportType(context.transportType);
+    }
+
     // Run universal security testing via extracted payload tester
     const allTests = await this.testers.payloadTester.runUniversalSecurityTests(
       toolsToTest,

@@ -32,6 +32,7 @@ import { SecurityPayloadGenerator } from "./SecurityPayloadGenerator";
 import { SanitizationDetector } from "./SanitizationDetector";
 import { DEFAULT_PERFORMANCE_CONFIG } from "../../config/performanceConfig";
 import { isTransientErrorPattern } from "./SecurityPatternLibrary";
+import { ToolClassifier } from "../../ToolClassifier";
 
 /**
  * Re-export ProgressCallback for external use
@@ -61,6 +62,11 @@ export interface PayloadTestConfig {
    * When provided, enables annotation-aware false positive reduction
    */
   toolAnnotationsContext?: ToolAnnotationsContext;
+  /**
+   * Transport type for context-aware test skipping
+   * When "http" or "sse", skip filesystem-only tests (e.g., Path Traversal)
+   */
+  transportType?: "stdio" | "http" | "sse";
 }
 
 /**
@@ -99,6 +105,42 @@ export class SecurityPayloadTester {
    */
   setToolAnnotationsContext(context: ToolAnnotationsContext | undefined): void {
     this.config.toolAnnotationsContext = context;
+  }
+
+  /**
+   * Set transport type for context-aware test skipping (FP reduction)
+   * Call before running tests to skip irrelevant patterns
+   */
+  setTransportType(transportType: "stdio" | "http" | "sse" | undefined): void {
+    this.config.transportType = transportType;
+  }
+
+  /**
+   * Check if an attack pattern should be skipped for a given tool.
+   * Reduces false positives by skipping irrelevant test categories.
+   */
+  private shouldSkipPattern(tool: Tool, attackName: string): string | null {
+    // Skip "Calculator Injection" for non-calculator tools
+    if (attackName === "Calculator Injection") {
+      const classifier = new ToolClassifier();
+      const result = classifier.classify(tool.name, tool.description);
+      const hasCalcCategory = result.categories.some(
+        (c) => c === "calculator" || c === "code_executor",
+      );
+      if (!hasCalcCategory) {
+        return "Tool is not a calculator/code executor - Calculator Injection not applicable";
+      }
+    }
+
+    // Skip "Path Traversal" for HTTP/SSE transport (no local filesystem)
+    if (attackName === "Path Traversal") {
+      const transport = this.config.transportType;
+      if (transport === "http" || transport === "sse") {
+        return "Remote transport (HTTP/SSE) - Path Traversal not applicable to remote servers";
+      }
+    }
+
+    return null;
   }
 
   /**
@@ -209,6 +251,29 @@ export class SecurityPayloadTester {
           this.logger.log(`Testing ${tool.name} with all attack patterns`);
 
           for (const attackPattern of attackPatterns) {
+            // Skip irrelevant attack patterns to reduce false positives
+            const skipReason = this.shouldSkipPattern(
+              tool,
+              attackPattern.attackName,
+            );
+            if (skipReason) {
+              const payloads = getPayloadsForAttack(attackPattern.attackName);
+              for (const payload of payloads) {
+                toolResults.push({
+                  testName: attackPattern.attackName,
+                  description: payload.description,
+                  payload: payload.payload,
+                  riskLevel: payload.riskLevel,
+                  toolName: tool.name,
+                  vulnerable: false,
+                  evidence: skipReason,
+                });
+                completedTests++;
+                batchCount++;
+              }
+              continue;
+            }
+
             const payloads = getPayloadsForAttack(attackPattern.attackName);
 
             for (const payload of payloads) {
@@ -419,6 +484,32 @@ export class SecurityPayloadTester {
       );
 
       for (const attackPattern of basicPatterns) {
+        // Skip irrelevant attack patterns to reduce false positives
+        const skipReason = this.shouldSkipPattern(
+          tool,
+          attackPattern.attackName,
+        );
+        if (skipReason) {
+          const allPayloads = getPayloadsForAttack(attackPattern.attackName);
+          const payload = allPayloads[0];
+          if (payload) {
+            const skippedResult: SecurityTestResult = {
+              testName: attackPattern.attackName,
+              description: payload.description,
+              payload: payload.payload,
+              riskLevel: payload.riskLevel,
+              toolName: tool.name,
+              vulnerable: false,
+              evidence: skipReason,
+            };
+            results.push(skippedResult);
+            toolResults.push(skippedResult);
+            completedTests++;
+            batchCount++;
+          }
+          continue;
+        }
+
         const allPayloads = getPayloadsForAttack(attackPattern.attackName);
         const payload = allPayloads[0];
 
