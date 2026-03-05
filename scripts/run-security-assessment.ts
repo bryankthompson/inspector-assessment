@@ -230,7 +230,7 @@ async function runSecurityAssessment(
   // Create assessment context
   const config: AssessmentConfiguration = {
     ...DEFAULT_ASSESSMENT_CONFIG,
-    securityPatternsToTest: 17, // All 17 attack patterns
+    securityPatternsToTest: 13, // All 13 attack patterns
     reviewerMode: false,
     testTimeout: 30000,
   };
@@ -243,7 +243,7 @@ async function runSecurityAssessment(
   };
 
   // Run security assessment
-  console.log(`🛡️  Running security assessment with 17 attack patterns...`);
+  console.log(`🛡️  Running security assessment with 13 attack patterns...`);
   const assessor = new SecurityAssessor(config);
   const results = await assessor.assess(context);
 

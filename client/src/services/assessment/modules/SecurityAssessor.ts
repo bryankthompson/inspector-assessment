@@ -101,12 +101,16 @@ export class SecurityAssessor extends BaseAssessor {
       overallRiskLevel,
     );
 
+    // Compute audit analysis (pre-computed FP analysis for automated consumption)
+    const auditAnalysis = this.computeAuditAnalysis(validTests);
+
     return {
       promptInjectionTests: allTests,
       vulnerabilities,
       overallRiskLevel,
       status,
       explanation,
+      auditAnalysis,
     };
   }
 
@@ -171,6 +175,12 @@ export class SecurityAssessor extends BaseAssessor {
     );
 
     for (const tool of toolsToTest) {
+      // Classify tool once for filtering decisions
+      const toolClassification = new ToolClassifier().classify(
+        tool.name,
+        tool.description,
+      );
+
       // Tools with no input parameters can't be exploited via payload injection
       // Add passing results so they appear in the UI
       if (!this.hasInputParameters(tool)) {
@@ -203,6 +213,49 @@ export class SecurityAssessor extends BaseAssessor {
 
       // Test with each attack type (all patterns in advanced mode)
       for (const attackPattern of attackPatterns) {
+        // Skip calculator injection on non-calculator tools (major FP reduction)
+        if (
+          attackPattern.attackName === "Calculator Injection" &&
+          !toolClassification.categories.includes(ToolCategory.CALCULATOR)
+        ) {
+          const payloads = getPayloadsForAttack(attackPattern.attackName);
+          for (const payload of payloads) {
+            results.push({
+              testName: attackPattern.attackName,
+              description: payload.description,
+              payload: payload.payload,
+              riskLevel: payload.riskLevel,
+              toolName: tool.name,
+              vulnerable: false,
+              evidence:
+                "Skipped: Calculator injection tests only run on math/calc/eval tools",
+            });
+          }
+          continue;
+        }
+
+        // Skip path traversal on HTTP/SSE transport (no filesystem to traverse)
+        if (
+          attackPattern.attackName === "Path Traversal" &&
+          context.transportType &&
+          context.transportType !== "stdio"
+        ) {
+          const payloads = getPayloadsForAttack(attackPattern.attackName);
+          for (const payload of payloads) {
+            results.push({
+              testName: attackPattern.attackName,
+              description: payload.description,
+              payload: payload.payload,
+              riskLevel: payload.riskLevel,
+              toolName: tool.name,
+              vulnerable: false,
+              evidence:
+                "Skipped: Path traversal tests not applicable for remote (HTTP/SSE) servers",
+            });
+          }
+          continue;
+        }
+
         // Get ALL payloads for this attack pattern
         const payloads = getPayloadsForAttack(attackPattern.attackName);
 
@@ -278,6 +331,12 @@ export class SecurityAssessor extends BaseAssessor {
     );
 
     for (const tool of toolsToTest) {
+      // Classify tool once for filtering decisions
+      const toolClassification = new ToolClassifier().classify(
+        tool.name,
+        tool.description,
+      );
+
       // Tools with no input parameters can't be exploited via payload injection
       // Add passing results so they appear in the UI
       if (!this.hasInputParameters(tool)) {
@@ -312,6 +371,23 @@ export class SecurityAssessor extends BaseAssessor {
 
       // Test with each critical pattern
       for (const attackPattern of basicPatterns) {
+        // Skip calculator injection on non-calculator tools (major FP reduction)
+        if (
+          attackPattern.attackName === "Calculator Injection" &&
+          !toolClassification.categories.includes(ToolCategory.CALCULATOR)
+        ) {
+          continue;
+        }
+
+        // Skip path traversal on HTTP/SSE transport (no filesystem to traverse)
+        if (
+          attackPattern.attackName === "Path Traversal" &&
+          context.transportType &&
+          context.transportType !== "stdio"
+        ) {
+          continue;
+        }
+
         // Get only the FIRST (most generic) payload for basic testing
         const allPayloads = getPayloadsForAttack(attackPattern.attackName);
         const payload = allPayloads[0]; // Just use first payload
@@ -439,6 +515,12 @@ export class SecurityAssessor extends BaseAssessor {
         payload,
       );
 
+      // Classify tool for audit-mode output
+      const classification = new ToolClassifier().classify(
+        tool.name,
+        tool.description,
+      );
+
       return {
         testName: attackName,
         description: payload.description,
@@ -449,6 +531,12 @@ export class SecurityAssessor extends BaseAssessor {
         evidence,
         response: this.extractResponseContent(response),
         ...confidenceResult,
+        // Audit-mode fields
+        vulnerableHighConfidence:
+          isVulnerable &&
+          (confidenceResult.confidence === "high" ||
+            !confidenceResult.confidence),
+        toolCategory: classification.categories[0] || "generic",
       };
     } catch (error) {
       // Check if error is a connection/server failure
@@ -1015,6 +1103,86 @@ export class SecurityAssessor extends BaseAssessor {
     }
 
     return vulnerabilities;
+  }
+
+  /**
+   * Compute audit analysis for automated consumption
+   * Pre-computes false positive likelihood and response uniformity per tool
+   */
+  private computeAuditAnalysis(validTests: SecurityTestResult[]): {
+    highConfidenceVulnerabilities: string[];
+    needsReview: string[];
+    falsePositiveLikelihood: Record<string, "HIGH" | "MEDIUM" | "LOW">;
+    responseUniformity: Record<
+      string,
+      { uniqueResponses: number; totalTests: number }
+    >;
+  } {
+    const highConfVulns: string[] = [];
+    const needsReview: string[] = [];
+    const fpLikelihood: Record<string, "HIGH" | "MEDIUM" | "LOW"> = {};
+    const uniformity: Record<
+      string,
+      { uniqueResponses: number; totalTests: number }
+    > = {};
+
+    // Group vulnerable tests by tool
+    const vulnByTool: Record<string, SecurityTestResult[]> = {};
+    for (const test of validTests) {
+      if (test.vulnerable) {
+        const name = test.toolName || "unknown";
+        if (!vulnByTool[name]) vulnByTool[name] = [];
+        vulnByTool[name].push(test);
+      }
+    }
+
+    for (const [toolName, tests] of Object.entries(vulnByTool)) {
+      // High confidence vulnerabilities
+      const highConf = tests.filter(
+        (t) => !t.confidence || t.confidence === "high",
+      );
+      if (highConf.length > 0) {
+        highConfVulns.push(
+          `${toolName}: ${highConf.map((t) => t.testName).join(", ")}`,
+        );
+      }
+
+      // Needs review (medium/low confidence)
+      const reviewNeeded = tests.filter(
+        (t) => t.confidence === "medium" || t.confidence === "low",
+      );
+      if (reviewNeeded.length > 0) {
+        needsReview.push(
+          `${toolName}: ${reviewNeeded.map((t) => t.testName).join(", ")}`,
+        );
+      }
+
+      // Response uniformity analysis
+      const responses = tests.map((t) =>
+        (t.response || "").trim().substring(0, 200),
+      );
+      const uniqueResponses = new Set(responses).size;
+      uniformity[toolName] = {
+        uniqueResponses,
+        totalTests: tests.length,
+      };
+
+      // FP likelihood based on response uniformity
+      if (uniqueResponses === 1 && tests.length >= 2) {
+        fpLikelihood[toolName] = "HIGH";
+      } else if (uniqueResponses < tests.length / 2 && tests.length >= 4) {
+        fpLikelihood[toolName] = "MEDIUM";
+      } else {
+        fpLikelihood[toolName] = "LOW";
+      }
+    }
+
+    return {
+      highConfidenceVulnerabilities: highConfVulns,
+      needsReview,
+      falsePositiveLikelihood: fpLikelihood,
+      responseUniformity: uniformity,
+    };
   }
 
   /**

@@ -66,6 +66,10 @@ export interface AssessmentContext {
   // MCPB manifest validation (optional)
   manifestJson?: ManifestJsonSchema;
   manifestRaw?: string; // Raw manifest.json content for parsing validation
+
+  // Transport type for context-aware security testing
+  // Used to skip irrelevant tests (e.g., path traversal on remote servers)
+  transportType?: "stdio" | "http" | "sse";
 }
 
 export class AssessmentOrchestrator {

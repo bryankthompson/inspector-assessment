@@ -237,7 +237,7 @@ async function runSecurityAssessment(
 
   const config: AssessmentConfiguration = {
     ...DEFAULT_ASSESSMENT_CONFIG,
-    securityPatternsToTest: 17,
+    securityPatternsToTest: 13,
     reviewerMode: false,
     testTimeout: 30000,
   };
@@ -247,9 +247,10 @@ async function runSecurityAssessment(
     tools,
     callTool: createCallToolWrapper(client),
     config,
+    transportType: serverConfig.transport || "stdio",
   };
 
-  console.log(`🛡️  Running security assessment with 17 attack patterns...`);
+  console.log(`🛡️  Running security assessment with 13 attack patterns...`);
   const assessor = new SecurityAssessor(config);
   const results = await assessor.assess(context);
 
@@ -386,7 +387,7 @@ function printHelp() {
   console.log(`
 Usage: mcp-assess-security [options] [server-name]
 
-Run security assessment against an MCP server with 17 attack patterns.
+Run security assessment against an MCP server with 13 attack patterns.
 
 Options:
   --server, -s <name>    Server name (required, or pass as first positional arg)
@@ -396,15 +397,14 @@ Options:
   --verbose, -v          Enable verbose logging
   --help, -h             Show this help message
 
-Attack Patterns Tested (17 total):
-  • Direct prompt injection
-  • Indirect prompt injection
-  • Instruction override
-  • Role-playing attacks
-  • Encoding bypass
-  • Multi-turn manipulation
-  • Context poisoning
-  • And more...
+Attack Patterns Tested (13 total):
+  • Command Injection        • SQL Injection
+  • Calculator Injection     • Path Traversal
+  • Type Safety              • Boundary Testing
+  • Required Fields          • MCP Error Format
+  • Timeout Handling         • Indirect Prompt Injection
+  • Unicode Bypass           • Nested Injection
+  • Package Squatting
 
 Examples:
   mcp-assess-security my-server

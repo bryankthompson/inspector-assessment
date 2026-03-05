@@ -48,6 +48,7 @@ interface AssessmentOptions {
   sourceCodePath?: string;
   claudeEnabled?: boolean;
   fullAssessment?: boolean;
+  auditMode?: boolean;
   verbose?: boolean;
   jsonOnly?: boolean;
   helpRequested?: boolean;
@@ -286,7 +287,22 @@ function buildConfig(options: AssessmentOptions): AssessmentConfiguration {
     testTimeout: 30000,
   };
 
-  if (options.fullAssessment !== false) {
+  if (options.auditMode) {
+    // Audit mode: only HIGH-value modules for automated MCP auditing
+    config.assessmentCategories = {
+      functionality: true,
+      security: true,
+      documentation: false,
+      errorHandling: true,
+      usability: false,
+      mcpSpecCompliance: true,
+      aupCompliance: false,
+      toolAnnotations: true,
+      prohibitedLibraries: false,
+      manifestValidation: false,
+      portability: false,
+    };
+  } else if (options.fullAssessment !== false) {
     config.assessmentCategories = {
       functionality: true,
       security: true,
@@ -376,6 +392,7 @@ async function runFullAssessment(
     callTool: createCallToolWrapper(client),
     config,
     sourceCodePath: options.sourceCodePath,
+    transportType: serverConfig.transport || "stdio",
     ...sourceFiles,
   };
 
@@ -400,13 +417,53 @@ function saveResults(
   serverName: string,
   results: MCPDirectoryAssessment,
   outputPath?: string,
+  transportType?: string,
 ): string {
   const defaultPath = `/tmp/inspector-full-assessment-${serverName}.json`;
   const finalPath = outputPath || defaultPath;
 
+  // Build audit summary for automated consumption
+  const securityResult = results.security as {
+    auditAnalysis?: {
+      highConfidenceVulnerabilities: string[];
+      needsReview: string[];
+      falsePositiveLikelihood: Record<string, string>;
+    };
+    vulnerabilities?: string[];
+  };
+  const functionalityResult = results.functionality as {
+    workingTools?: number;
+    totalTools?: number;
+  };
+  const mcpResult = results.mcpSpecCompliance as {
+    metrics?: { overallScore?: number };
+  };
+  const errorResult = results.errorHandling as {
+    metrics?: { mcpComplianceScore?: number };
+  };
+
+  const auditSummary = {
+    highConfidenceVulnerabilities:
+      securityResult?.auditAnalysis?.highConfidenceVulnerabilities || [],
+    needsReview: securityResult?.auditAnalysis?.needsReview || [],
+    falsePositiveLikelihood:
+      securityResult?.auditAnalysis?.falsePositiveLikelihood || {},
+    functionalTools: functionalityResult?.workingTools || 0,
+    totalTools: functionalityResult?.totalTools || 0,
+    mcpComplianceScore: errorResult?.metrics?.mcpComplianceScore || 0,
+    transportType: transportType || "unknown",
+    recommendedAction:
+      results.overallStatus === "PASS"
+        ? "APPROVE"
+        : results.overallStatus === "FAIL"
+          ? "REJECT"
+          : "REVIEW",
+  };
+
   const output = {
     timestamp: new Date().toISOString(),
     assessmentType: "full",
+    auditSummary,
     ...results,
   };
 
@@ -563,6 +620,9 @@ function parseArgs(): AssessmentOptions {
       case "--full":
         options.fullAssessment = true;
         break;
+      case "--audit-mode":
+        options.auditMode = true;
+        break;
       case "--verbose":
       case "-v":
         options.verbose = true;
@@ -617,6 +677,9 @@ Options:
   --source <path>        Source code path for deep analysis (AUP, portability, etc.)
   --claude-enabled       Enable Claude Code integration for intelligent analysis
   --full                 Enable all assessment modules (default)
+  --audit-mode           Run only high-value modules for automated MCP auditing
+                         (Functionality, Security, ErrorHandling, MCPSpecCompliance, ToolAnnotations)
+                         Reduces false positives and includes audit summary in output
   --json                 Output only JSON (no console summary)
   --verbose, -v          Enable verbose logging
   --help, -h             Show this help message
@@ -658,10 +721,16 @@ async function main() {
       displaySummary(results);
     }
 
+    // Determine transport type for audit summary
+    const serverConfig = loadServerConfig(
+      options.serverName,
+      options.serverConfigPath,
+    );
     const outputPath = saveResults(
       options.serverName,
       results,
       options.outputPath,
+      serverConfig.transport || "stdio",
     );
 
     if (options.jsonOnly) {

@@ -66,6 +66,9 @@ export interface SecurityTestResult {
   connectionError?: boolean; // True if test failed due to connection/server failure
   errorType?: "connection" | "server" | "protocol"; // Classify error type
   testReliability?: "completed" | "failed" | "retried"; // Test execution status
+  // Audit-mode fields for automated consumption
+  vulnerableHighConfidence?: boolean; // Only true when confidence === "high" AND vulnerable
+  toolCategory?: string; // Classified tool category (e.g., "search_retrieval", "calculator")
 }
 
 export interface CodeExample {
@@ -243,6 +246,16 @@ export interface SecurityAssessment {
   overallRiskLevel: SecurityRiskLevel;
   status: AssessmentStatus;
   explanation: string;
+  // Audit-mode: pre-computed false positive analysis
+  auditAnalysis?: {
+    highConfidenceVulnerabilities: string[];
+    needsReview: string[];
+    falsePositiveLikelihood: Record<string, "HIGH" | "MEDIUM" | "LOW">;
+    responseUniformity: Record<
+      string,
+      { uniqueResponses: number; totalTests: number }
+    >;
+  };
 }
 
 export interface DocumentationAssessment {
