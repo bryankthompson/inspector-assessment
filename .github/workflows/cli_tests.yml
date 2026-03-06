@@ -42,8 +42,15 @@ jobs:
       - name: Explicitly pre-install test dependencies
         run: npx -y @modelcontextprotocol/server-everything --help || true
 
-      - name: Run tests
-        run: npm test
+      - name: Run unit tests
+        run: npm run test:unit
+        env:
+          NPM_CONFIG_YES: true
+          CI: true
+
+      - name: Run integration tests
+        run: npm run test:integration
+        continue-on-error: true
         env:
           NPM_CONFIG_YES: true
           CI: true

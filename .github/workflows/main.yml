@@ -38,6 +38,9 @@ jobs:
       #   working-directory: ./client
       #   run: npm test
 
+      - name: Clean vite temp to avoid EACCES
+        run: rm -rf client/node_modules/.vite-temp
+
       - run: npm run build
 
   publish:
