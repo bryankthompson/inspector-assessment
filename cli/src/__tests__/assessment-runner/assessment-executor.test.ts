@@ -114,6 +114,7 @@ jest.unstable_mockModule("../../lib/jsonl-events.js", () => ({
   emitAnnotationReviewRecommended: jest.fn(),
   emitAnnotationAligned: jest.fn(),
   emitModulesConfigured: mockEmitModulesConfigured,
+  emitNativeModuleWarning: jest.fn(),
   // Phase 7 events
   emitPhaseStarted: jest.fn(),
   emitPhaseComplete: jest.fn(),

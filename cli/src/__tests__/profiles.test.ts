@@ -34,7 +34,7 @@ describe("Profile Definitions", () => {
   });
 
   describe("Profile Constants", () => {
-    it("should have six profiles defined", () => {
+    it("should have seven profiles defined", () => {
       const profiles = Object.keys(ASSESSMENT_PROFILES);
       expect(profiles).toEqual([
         "quick",
@@ -43,6 +43,7 @@ describe("Profile Definitions", () => {
         "full",
         "dev",
         "all",
+        "audit",
       ]);
     });
 
@@ -264,8 +265,8 @@ describe("getProfileModules", () => {
     expect(modules).not.toContain("externalAPIScanner");
   });
 
-  it("should include externalAPIScanner when hasSourceCode=true", () => {
-    const modules = getProfileModules("full", { hasSourceCode: true });
+  it("should include externalAPIScanner when hasSourceCode=true on all profile", () => {
+    const modules = getProfileModules("all", { hasSourceCode: true });
     expect(modules).toContain("externalAPIScanner");
   });
 
