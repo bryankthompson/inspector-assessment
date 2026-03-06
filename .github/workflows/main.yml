@@ -23,8 +23,9 @@ jobs:
           cache: npm
 
       # Working around https://github.com/npm/cli/issues/4828
-      # - run: npm ci
-      - run: npm install --no-package-lock
+      # --ignore-scripts skips the prepare hook which runs build:docker
+      # and creates dist/ with permissions that block the real build step
+      - run: npm install --no-package-lock --ignore-scripts
 
       - name: Check version consistency
         run: npm run check-version
@@ -37,11 +38,6 @@ jobs:
       # - name: Run client tests
       #   working-directory: ./client
       #   run: npm test
-
-      - name: Clean vite artifacts to avoid EACCES
-        run: |
-          chmod -R u+rwx client/dist client/node_modules/.vite-temp 2>/dev/null || true
-          rm -rf client/dist client/node_modules/.vite-temp
 
       - run: npm run build
 
