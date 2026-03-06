@@ -20,7 +20,6 @@ import {
   inferAccessControls,
   inferDataClassification,
   injectPayloadIntoTemplate,
-  type AccessControlInference,
   type DataClassification,
 } from "../../modules/resourceTests/ResourceUriValidator";
 

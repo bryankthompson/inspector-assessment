@@ -21,7 +21,6 @@ import {
   stringToBytes,
   startsWithBytes,
   type SensitivePatternResult,
-  type MimeValidationResult,
 } from "../../modules/resourceTests/ResourceContentAnalyzer";
 
 describe("ResourceContentAnalyzer - detectSensitivePatterns", () => {
