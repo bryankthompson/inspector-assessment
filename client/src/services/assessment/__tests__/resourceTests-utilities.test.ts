@@ -42,7 +42,6 @@ import {
   generateRecommendations,
   createNoResourcesResponse,
   calculateMetrics,
-  type ResourceMetrics,
 } from "../modules/resourceTests/ResourceResultBuilder";
 
 import { ResourceTestResult } from "@/lib/assessmentTypes";
@@ -606,7 +605,9 @@ describe("ResourceTesters Factory", () => {
 
   describe("createResourceTestersWithOverrides", () => {
     it("should use provided overrides", () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const mockResourceTester = {} as any;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const mockProbeTester = {} as any;
 
       const testers = createResourceTestersWithOverrides(
@@ -623,6 +624,7 @@ describe("ResourceTesters Factory", () => {
     });
 
     it("should create missing testers with defaults", () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const mockEnrichmentBuilder = {} as any;
 
       const testers = createResourceTestersWithOverrides(
@@ -638,6 +640,7 @@ describe("ResourceTesters Factory", () => {
     });
 
     it("should allow partial overrides", () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const mockResourceTester = {} as any;
 
       const testers = createResourceTestersWithOverrides(

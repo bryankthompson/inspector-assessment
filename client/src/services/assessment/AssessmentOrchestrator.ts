@@ -210,11 +210,13 @@ export class AssessmentOrchestrator {
     try {
       this.claudeBridge = new ClaudeCodeBridge(bridgeConfig);
       this.claudeEnabled = true;
+      // eslint-disable-next-line no-console
       console.log(
         "[AssessmentOrchestrator] Claude Code Bridge initialized with features:",
         bridgeConfig.features,
       );
     } catch (error) {
+      // eslint-disable-next-line no-console
       console.warn(
         "[AssessmentOrchestrator] Failed to initialize Claude Code Bridge:",
         error,
@@ -303,8 +305,8 @@ export class AssessmentOrchestrator {
     this.resetAllTestCounts();
 
     // Run assessments in parallel if enabled
-    const assessmentPromises: Promise<any>[] = [];
-    const assessmentResults: any = {};
+    const assessmentPromises: Promise<Record<string, unknown>>[] = [];
+    const assessmentResults: Record<string, Record<string, unknown>> = {};
 
     if (this.config.parallelTesting) {
       // Core assessments
@@ -449,9 +451,9 @@ export class AssessmentOrchestrator {
       name: string,
       params: Record<string, unknown>,
     ) => Promise<CompatibilityCallToolResult>,
-    serverInfo?: any,
+    serverInfo?: Record<string, unknown>,
     readmeContent?: string,
-    packageJson?: any,
+    packageJson?: Record<string, unknown>,
   ): Promise<MCPDirectoryAssessment> {
     const context: AssessmentContext = {
       serverName,
@@ -485,6 +487,7 @@ export class AssessmentOrchestrator {
     const manifestCount = this.manifestValidationAssessor?.getTestCount() || 0;
     const portabilityCount = this.portabilityAssessor?.getTestCount() || 0;
 
+    // eslint-disable-next-line no-console
     console.log("[AssessmentOrchestrator] Test counts by assessor:", {
       functionality: functionalityCount,
       security: securityCount,
@@ -512,18 +515,21 @@ export class AssessmentOrchestrator {
       manifestCount +
       portabilityCount;
 
+    // eslint-disable-next-line no-console
     console.log("[AssessmentOrchestrator] Total test count:", total);
 
     return total;
   }
 
-  private determineOverallStatus(results: any): AssessmentStatus {
+  private determineOverallStatus(
+    results: Record<string, Record<string, unknown>>,
+  ): AssessmentStatus {
     const statuses: AssessmentStatus[] = [];
 
     // Collect all statuses
-    Object.values(results).forEach((assessment: any) => {
+    Object.values(results).forEach((assessment) => {
       if (assessment?.status) {
-        statuses.push(assessment.status);
+        statuses.push(assessment.status as AssessmentStatus);
       }
     });
 
@@ -537,11 +543,13 @@ export class AssessmentOrchestrator {
     return "PASS";
   }
 
-  private generateSummary(results: any): string {
+  private generateSummary(
+    results: Record<string, Record<string, unknown>>,
+  ): string {
     const parts: string[] = [];
     const totalCategories = Object.keys(results).length;
     const passedCategories = Object.values(results).filter(
-      (r: any) => r?.status === "PASS",
+      (r) => r?.status === "PASS",
     ).length;
 
     parts.push(
@@ -563,9 +571,9 @@ export class AssessmentOrchestrator {
 
     // New assessor findings
     if (results.aupCompliance?.violations?.length > 0) {
-      const criticalCount = results.aupCompliance.violations.filter(
-        (v: any) => v.severity === "CRITICAL",
-      ).length;
+      const criticalCount = (
+        results.aupCompliance.violations as Array<{ severity?: string }>
+      ).filter((v) => v.severity === "CRITICAL").length;
       if (criticalCount > 0) {
         parts.push(`CRITICAL: ${criticalCount} AUP violation(s) detected.`);
       } else {
@@ -582,9 +590,9 @@ export class AssessmentOrchestrator {
     }
 
     if (results.prohibitedLibraries?.matches?.length > 0) {
-      const blockingCount = results.prohibitedLibraries.matches.filter(
-        (m: any) => m.severity === "BLOCKING",
-      ).length;
+      const blockingCount = (
+        results.prohibitedLibraries.matches as Array<{ severity?: string }>
+      ).filter((m) => m.severity === "BLOCKING").length;
       if (blockingCount > 0) {
         parts.push(
           `BLOCKING: ${blockingCount} prohibited library/libraries detected.`,
@@ -599,13 +607,18 @@ export class AssessmentOrchestrator {
     return parts.join(" ");
   }
 
-  private generateRecommendations(results: any): string[] {
+  private generateRecommendations(
+    results: Record<string, Record<string, unknown>>,
+  ): string[] {
     const recommendations: string[] = [];
 
     // Aggregate recommendations from all assessments
-    Object.values(results).forEach((assessment: any) => {
-      if (assessment?.recommendations) {
-        recommendations.push(...assessment.recommendations);
+    Object.values(results).forEach((assessment) => {
+      if (
+        assessment?.recommendations &&
+        Array.isArray(assessment.recommendations)
+      ) {
+        recommendations.push(...(assessment.recommendations as string[]));
       }
     });
 
