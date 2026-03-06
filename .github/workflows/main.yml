@@ -39,7 +39,9 @@ jobs:
       #   run: npm test
 
       - name: Clean vite artifacts to avoid EACCES
-        run: rm -rf client/node_modules/.vite-temp client/dist
+        run: |
+          chmod -R u+rwx client/dist client/node_modules/.vite-temp 2>/dev/null || true
+          rm -rf client/dist client/node_modules/.vite-temp
 
       - run: npm run build
 
