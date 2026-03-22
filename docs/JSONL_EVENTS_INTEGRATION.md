@@ -649,7 +649,6 @@ try {
 
 - [JSONL Events Reference](JSONL_EVENTS_REFERENCE.md) - All 13 event types and schemas
 - [JSONL Events Algorithms](JSONL_EVENTS_ALGORITHMS.md) - EventBatcher and AUP sampling
-- [REAL_TIME_PROGRESS_OUTPUT.md](REAL_TIME_PROGRESS_OUTPUT.md) - Legacy progress format documentation
 - [ASSESSMENT_CATALOG.md](ASSESSMENT_CATALOG.md) - Complete assessment module reference
 - `/scripts/lib/jsonl-events.ts` - Event emission implementation
 - `/scripts/__tests__/jsonl-events.test.ts` - Comprehensive event tests

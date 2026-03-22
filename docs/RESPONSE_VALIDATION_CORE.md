@@ -1,9 +1,6 @@
 # Response Validation Core
 
-> **Part of the Response Validation documentation series:**
->
-> - **Core** (this document) - Validation logic, business error detection, confidence scoring
-> - [Extension](RESPONSE_VALIDATION_EXTENSION.md) - Adding rules, best practices, troubleshooting, API reference
+> **See also:** [Extension](RESPONSE_VALIDATION_EXTENSION.md)
 
 ## Overview
 

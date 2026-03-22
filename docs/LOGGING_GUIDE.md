@@ -445,7 +445,7 @@ LOG_LEVEL=debug mcp-assess-full --server my-server --silent
 ## Related Documentation
 
 - [CLI Assessment Guide](CLI_ASSESSMENT_GUIDE.md) - Complete CLI reference
-- [JSONL Events API](JSONL_EVENTS_API.md) - Machine-parseable event stream
+- [JSONL Events Reference](JSONL_EVENTS_REFERENCE.md) - Machine-parseable event stream
 - [Assessment Module Developer Guide](ASSESSMENT_MODULE_DEVELOPER_GUIDE.md) - Creating custom modules
 
 ---

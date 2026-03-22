@@ -144,15 +144,11 @@ Real-time progress streaming for CLI/auditor integration.
 
 ### Deprecation Documentation (v1.25.2+)
 
-Start with [Deprecation Index](DEPRECATION_INDEX.md) for navigation, then choose:
-
 | Document                                                            | Purpose                                        |
 | ------------------------------------------------------------------- | ---------------------------------------------- |
-| [Deprecation Index](DEPRECATION_INDEX.md)                           | Navigation hub for all deprecation docs        |
 | [Deprecation Guide](DEPRECATION_GUIDE.md)                           | What's deprecated, why, and migration timeline |
 | [Deprecation API Reference](DEPRECATION_API_REFERENCE.md)           | Technical reference, warning formats, testing  |
 | [Deprecation Migration Examples](DEPRECATION_MIGRATION_EXAMPLES.md) | Copy-paste ready code examples                 |
-| [Deprecation Removal Checklist](DEPRECATION_REMOVAL_CHECKLIST.md)   | Checklist for removing deprecated code         |
 
 ### General Maintenance
 
