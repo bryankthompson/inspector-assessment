@@ -15,18 +15,21 @@ import {
   beforeEach,
   afterEach,
 } from "@jest/globals";
-import {
-  detectNativeModules,
-  type NativeModuleDetectionResult,
-} from "../../lib/assessment-runner/native-module-detector.js";
 
-// Mock the jsonl-events module
-jest.mock("../../lib/jsonl-events.js", () => ({
-  emitNativeModuleWarning: jest.fn(),
+// ESM-compatible mock: must use jest.unstable_mockModule before dynamic import
+const mockEmitNativeModuleWarning = jest.fn();
+jest.unstable_mockModule("../../lib/jsonl-events.js", () => ({
+  emitNativeModuleWarning: mockEmitNativeModuleWarning,
+  emitJSONL: jest.fn(),
+  SCHEMA_VERSION: 3,
 }));
 
-// Import the mocked function for assertions
-import { emitNativeModuleWarning } from "../../lib/jsonl-events.js";
+// Dynamic import after mock registration
+const { detectNativeModules } =
+  await import("../../lib/assessment-runner/native-module-detector.js");
+type NativeModuleDetectionResult = Awaited<
+  ReturnType<typeof detectNativeModules>
+>;
 
 describe("native-module-detector", () => {
   // Store original console methods
@@ -50,7 +53,7 @@ describe("native-module-detector", () => {
       expect(result.count).toBe(0);
       expect(result.modules).toHaveLength(0);
       expect(Object.keys(result.suggestedEnvVars)).toHaveLength(0);
-      expect(emitNativeModuleWarning).not.toHaveBeenCalled();
+      expect(mockEmitNativeModuleWarning).not.toHaveBeenCalled();
     });
 
     it("should return empty result for package without native modules", () => {
@@ -66,7 +69,7 @@ describe("native-module-detector", () => {
       expect(result.detected).toBe(false);
       expect(result.count).toBe(0);
       expect(result.modules).toHaveLength(0);
-      expect(emitNativeModuleWarning).not.toHaveBeenCalled();
+      expect(mockEmitNativeModuleWarning).not.toHaveBeenCalled();
     });
 
     it("should detect canvas in dependencies", () => {
@@ -93,8 +96,8 @@ describe("native-module-detector", () => {
 
       detectNativeModules(packageJson, { jsonOnly: true });
 
-      expect(emitNativeModuleWarning).toHaveBeenCalledTimes(1);
-      expect(emitNativeModuleWarning).toHaveBeenCalledWith(
+      expect(mockEmitNativeModuleWarning).toHaveBeenCalledTimes(1);
+      expect(mockEmitNativeModuleWarning).toHaveBeenCalledWith(
         "canvas",
         "image",
         "HIGH",
@@ -123,7 +126,7 @@ describe("native-module-detector", () => {
       expect(names).toContain("canvas");
       expect(names).toContain("sharp");
 
-      expect(emitNativeModuleWarning).toHaveBeenCalledTimes(2);
+      expect(mockEmitNativeModuleWarning).toHaveBeenCalledTimes(2);
     });
 
     it("should collect suggested env vars from all modules", () => {

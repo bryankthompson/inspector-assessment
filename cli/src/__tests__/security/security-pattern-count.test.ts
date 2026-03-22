@@ -7,10 +7,10 @@
  * - Configuration defaults
  * - Documentation comments
  *
- * Addresses QA requirement: verify all references to security pattern count are consistent (30 patterns).
+ * Addresses QA requirement: verify all references to security pattern count are consistent (13 patterns).
  *
  * NOTE: The DEFAULT_ASSESSMENT_CONFIG uses 8 patterns (for Anthropic's basic security testing).
- * CLI tools override this to 30 patterns for comprehensive security assessment.
+ * CLI tools override this to 13 patterns for context-aware security assessment.
  * This test verifies consistency within each context.
  */
 
@@ -51,7 +51,7 @@ describe("Security Pattern Count Consistency", () => {
         },
       ];
 
-      const expectedCount = 30;
+      const expectedCount = 13;
       const findings: Array<{ name: string; value: number }> = [];
 
       for (const ref of references) {
@@ -72,13 +72,13 @@ describe("Security Pattern Count Consistency", () => {
       expect(allMatch).toBe(true);
     });
 
-    it("should document 30 patterns in help text", () => {
+    it("should document 13 patterns in help text", () => {
       const filePath = path.join(projectRoot, "cli/src/assess-security.ts");
       const content = fs.readFileSync(filePath, "utf-8");
 
-      // Verify help text explicitly mentions 30 patterns
-      expect(content).toContain("30 attack patterns");
-      expect(content).toContain("Attack Patterns Tested (30 total)");
+      // Verify help text explicitly mentions 13 patterns
+      expect(content).toContain("13 attack patterns");
+      expect(content).toContain("Attack Patterns Tested (13 total)");
     });
   });
 
@@ -201,15 +201,15 @@ describe("Security Pattern Count Consistency", () => {
       const filePath = path.join(projectRoot, "cli/src/assess-security.ts");
       const content = fs.readFileSync(filePath, "utf-8");
 
-      // CLI uses 30 patterns (expanded from base 8)
-      expect(content).toContain("30 attack patterns");
-      expect(content).toContain("(30 total)");
+      // CLI uses 13 patterns (context-aware from base 8)
+      expect(content).toContain("13 attack patterns");
+      expect(content).toContain("(13 total)");
     });
   });
 
   describe("Cross-file consistency", () => {
     it("should have matching pattern counts between related files", () => {
-      // assess-security.ts: 30 patterns (CLI override)
+      // assess-security.ts: 13 patterns (CLI override)
       const assessSecurityPath = path.join(
         projectRoot,
         "cli/src/assess-security.ts",
@@ -225,7 +225,7 @@ describe("Security Pattern Count Consistency", () => {
       expect(assessSecurityMatch).toBeTruthy();
       if (assessSecurityMatch) {
         const cliCount = parseInt(assessSecurityMatch[1], 10);
-        expect(cliCount).toBe(30); // CLI uses 30 patterns
+        expect(cliCount).toBe(13); // CLI uses 13 patterns
       }
 
       // configTypes.ts: 8 patterns default (Anthropic basic)
@@ -273,13 +273,13 @@ describe("Security Pattern Count Consistency", () => {
 
   describe("Pattern count validation rules", () => {
     it("should enforce consistent pattern counts across contexts", () => {
-      // Rule: CLI tools use 30 patterns (comprehensive security testing)
+      // Rule: CLI tools use 13 patterns (context-aware security testing)
       // Rule: Default config uses 8 patterns (Anthropic basic requirement)
       // Rule: Reviewer mode uses 3 patterns (fast reviews)
       // Rule: Developer/Audit modes use 8 patterns (comprehensive validation)
 
       const rules = {
-        cli: 30,
+        cli: 13,
         default: 8,
         reviewer: 3,
         developer: 8,
@@ -287,7 +287,7 @@ describe("Security Pattern Count Consistency", () => {
       };
 
       // This test documents the expected pattern counts for each context
-      expect(rules.cli).toBe(30);
+      expect(rules.cli).toBe(13);
       expect(rules.default).toBe(8);
       expect(rules.reviewer).toBe(3);
       expect(rules.developer).toBe(8);
@@ -308,8 +308,8 @@ describe("Security Pattern Count Consistency", () => {
         ...content.matchAll(/\((\d+) total\)/gi),
       ];
 
-      // All should reference 30
-      const expectedCount = 30;
+      // All should reference 13
+      const expectedCount = 13;
       if (configMatch) {
         expect(parseInt(configMatch[1], 10)).toBe(expectedCount);
       }
@@ -341,9 +341,9 @@ describe("Security Pattern Count Consistency", () => {
       const filePath = path.join(projectRoot, "cli/src/assess-security.ts");
       const content = fs.readFileSync(filePath, "utf-8");
 
-      // Help text should clearly state what "30 patterns" means
+      // Help text should clearly state what "13 patterns" means
       expect(content).toContain("Attack Patterns Tested");
-      expect(content).toContain("30 total");
+      expect(content).toContain("13 total");
 
       // Should list pattern categories for clarity
       expect(content).toContain("Command Injection");
