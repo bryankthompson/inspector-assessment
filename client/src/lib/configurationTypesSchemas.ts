@@ -49,6 +49,7 @@ export const InspectorConfigSchema = z.object({
   MCP_REQUEST_MAX_TOTAL_TIMEOUT: ConfigItemSchema,
   MCP_PROXY_FULL_ADDRESS: ConfigItemSchema,
   MCP_PROXY_AUTH_TOKEN: ConfigItemSchema,
+  MCP_TASK_TTL: ConfigItemSchema,
 });
 
 /**

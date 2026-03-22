@@ -138,7 +138,9 @@ export class ProtocolComplianceAssessor extends BaseAssessor<UnifiedProtocolComp
       callTool,
     );
     const capabilitiesCheck = this.capabilitiesChecker.check(context);
-    const serverInfoCheck = this.serverInfoChecker.check(context.serverInfo);
+    const serverInfoCheck = this.serverInfoChecker.check(
+      context.serverInfo as any,
+    );
 
     const protocolChecks: ProtocolChecks = {
       jsonRpcCompliance: {

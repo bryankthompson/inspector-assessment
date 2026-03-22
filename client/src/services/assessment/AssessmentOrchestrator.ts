@@ -119,6 +119,10 @@ export interface AssessmentContext {
   };
 }
 
+// Type aliases for assessment modules that reference MCP resources/prompts
+export type MCPResource = NonNullable<AssessmentContext["resources"]>[number];
+export type MCPPrompt = NonNullable<AssessmentContext["prompts"]>[number];
+
 export class AssessmentOrchestrator {
   private config: AssessmentConfiguration;
   private startTime: number = 0;

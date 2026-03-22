@@ -16,14 +16,15 @@ import {
   afterEach,
 } from "@jest/globals";
 
+// ESM-compatible mock: must use jest.unstable_mockModule before dynamic import
 const mockEmitNativeModuleWarning = jest.fn();
-
-// Mock the jsonl-events module (ESM requires unstable_mockModule)
 jest.unstable_mockModule("../../lib/jsonl-events.js", () => ({
   emitNativeModuleWarning: mockEmitNativeModuleWarning,
+  emitJSONL: jest.fn(),
+  SCHEMA_VERSION: 3,
 }));
 
-// Import after mocking
+// Dynamic import after mock registration
 const { detectNativeModules } =
   await import("../../lib/assessment-runner/native-module-detector.js");
 type NativeModuleDetectionResult = Awaited<

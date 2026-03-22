@@ -110,38 +110,36 @@ export class MetadataExtractor {
     context: AssessmentContext,
   ): TransportComplianceMetrics {
     // Issue #172: Check source-based transport detection first
-    if (context.transportDetection?.supportsStdio) {
+    const td = context.transportDetection as any;
+    if (td?.supportsStdio) {
       return {
-        supportsStreamableHTTP: context.transportDetection.supportsHTTP,
-        deprecatedSSE: context.transportDetection.supportsSSE,
+        supportsStreamableHTTP: td.supportsHTTP,
+        deprecatedSSE: td.supportsSSE,
         transportValidation: "passed",
         supportsStdio: true,
-        supportsSSE: context.transportDetection.supportsSSE,
-        confidence: context.transportDetection.confidence,
+        supportsSSE: td.supportsSSE,
+        confidence: td.confidence,
         detectionMethod: "source-code-analysis",
         requiresManualCheck: false,
-        transportEvidence: context.transportDetection.evidence.map(
-          (e) => `${e.source}: ${e.detail}`,
+        transportEvidence: td.evidence.map(
+          (e: any) => `${e.source}: ${e.detail}`,
         ),
       };
     }
 
     // HTTP-only detection
-    if (
-      context.transportDetection?.supportsHTTP &&
-      !context.transportDetection?.supportsStdio
-    ) {
+    if (td?.supportsHTTP && !td?.supportsStdio) {
       return {
         supportsStreamableHTTP: true,
-        deprecatedSSE: context.transportDetection.supportsSSE,
+        deprecatedSSE: td.supportsSSE,
         transportValidation: "passed",
         supportsStdio: false,
-        supportsSSE: context.transportDetection.supportsSSE,
-        confidence: context.transportDetection.confidence,
+        supportsSSE: td.supportsSSE,
+        confidence: td.confidence,
         detectionMethod: "source-code-analysis",
         requiresManualCheck: false,
-        transportEvidence: context.transportDetection.evidence.map(
-          (e) => `${e.source}: ${e.detail}`,
+        transportEvidence: td.evidence.map(
+          (e: any) => `${e.source}: ${e.detail}`,
         ),
       };
     }

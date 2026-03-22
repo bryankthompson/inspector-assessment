@@ -559,7 +559,9 @@ interface ErrorHandlingMetrics {
   hasProperErrorCodes: boolean;
   hasDescriptiveMessages: boolean;
   validatesInputs: boolean;
-  validationCoverage?: { /* coverage details */ };
+  validationCoverage?: {
+    /* coverage details */
+  };
   testDetails?: ErrorTestDetail[];
   // Issue #173 - Graceful degradation metrics
   gracefulDegradationCount?: number; // Count of graceful degradation detections

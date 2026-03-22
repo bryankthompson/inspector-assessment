@@ -194,7 +194,7 @@ export class ToolAnnotationAssessor extends BaseAssessor {
         description: t.description,
         inputSchema: t.inputSchema,
       })),
-      transportType: context.transportConfig?.type,
+      transportType: (context.transportConfig as any)?.type,
       sourceCodeFiles: context.sourceCodeFiles,
       packageJson:
         context.packageJson && typeof context.packageJson === "object"

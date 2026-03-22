@@ -70,7 +70,9 @@ export class MCPSpecComplianceAssessor extends BaseAssessor {
         rawResponse: jsonRpcCheck.rawResponse,
       },
       serverInfoValidity: {
-        passed: this.checkServerInfoValidity(context.serverInfo),
+        passed: this.checkServerInfoValidity(
+          context.serverInfo as ServerInfo | undefined,
+        ),
         confidence: "high",
         evidence: "Validated server info structure",
         rawResponse: context.serverInfo,
@@ -451,14 +453,14 @@ export class MCPSpecComplianceAssessor extends BaseAssessor {
       }
 
       // Check listChanged notification support
-      if (capabilities.resources.listChanged) {
+      if ((capabilities.resources as any).listChanged) {
         this.logger.info(
           "Server declares resources.listChanged notification support",
         );
       }
 
       // Check subscribe support
-      if (capabilities.resources.subscribe) {
+      if ((capabilities.resources as any).subscribe) {
         this.logger.info("Server declares resource subscription support");
       }
       this.testCount++;
@@ -476,7 +478,7 @@ export class MCPSpecComplianceAssessor extends BaseAssessor {
       }
 
       // Check listChanged notification support
-      if (capabilities.prompts.listChanged) {
+      if ((capabilities.prompts as any).listChanged) {
         this.logger.info(
           "Server declares prompts.listChanged notification support",
         );

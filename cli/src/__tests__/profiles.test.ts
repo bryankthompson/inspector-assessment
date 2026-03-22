@@ -162,6 +162,17 @@ describe("Profile Definitions", () => {
       }
       expect(ASSESSMENT_PROFILES.all.length).toBe(ALL_MODULES.length);
     });
+
+    it("audit profile should include focused modules for reduced false positives", () => {
+      const auditModules = ASSESSMENT_PROFILES.audit;
+      expect(auditModules).toContain("functionality");
+      expect(auditModules).toContain("security");
+      expect(auditModules).toContain("errorHandling");
+      expect(auditModules).toContain("protocolCompliance");
+      expect(auditModules).toContain("aupCompliance");
+      expect(auditModules).toContain("toolAnnotations");
+      expect(auditModules).toHaveLength(6);
+    });
   });
 });
 
@@ -265,9 +276,19 @@ describe("getProfileModules", () => {
     expect(modules).not.toContain("externalAPIScanner");
   });
 
-  it("should include externalAPIScanner when hasSourceCode=true on all profile", () => {
+  it("should not include externalAPIScanner in full profile (opt-in only, Issue #200)", () => {
+    const modules = getProfileModules("full", { hasSourceCode: true });
+    expect(modules).not.toContain("externalAPIScanner");
+  });
+
+  it("should include externalAPIScanner in all profile when hasSourceCode=true", () => {
     const modules = getProfileModules("all", { hasSourceCode: true });
     expect(modules).toContain("externalAPIScanner");
+  });
+
+  it("should exclude externalAPIScanner from all profile when hasSourceCode=false", () => {
+    const modules = getProfileModules("all", { hasSourceCode: false });
+    expect(modules).not.toContain("externalAPIScanner");
   });
 
   it("should handle multiple options together", () => {
@@ -296,6 +317,10 @@ describe("isValidProfileName", () => {
     expect(isValidProfileName("all")).toBe(true);
   });
 
+  it("should return true for audit profile", () => {
+    expect(isValidProfileName("audit")).toBe(true);
+  });
+
   it("should return false for invalid profile names", () => {
     expect(isValidProfileName("invalid")).toBe(false);
     expect(isValidProfileName("")).toBe(false);
@@ -318,6 +343,7 @@ describe("getProfileHelpText", () => {
     expect(help).toContain("full");
     expect(help).toContain("dev");
     expect(help).toContain("all");
+    expect(help).toContain("audit");
   });
 
   it("should contain module counts", () => {
@@ -439,6 +465,7 @@ describe("Profile Metadata", () => {
     expect(PROFILE_METADATA.full.tiers.length).toBe(4);
     expect(PROFILE_METADATA.dev.tiers.length).toBe(4);
     expect(PROFILE_METADATA.all.tiers.length).toBe(5); // All 4 tiers + Opt-In
+    expect(PROFILE_METADATA.audit.tiers.length).toBe(2);
   });
 
   it("should have dev profile metadata", () => {
@@ -454,6 +481,14 @@ describe("Profile Metadata", () => {
     expect(PROFILE_METADATA.all.description).toContain("opt-in");
     expect(PROFILE_METADATA.all.moduleCount).toBe(
       ASSESSMENT_PROFILES.all.length,
+    );
+  });
+
+  it("should have audit profile metadata", () => {
+    expect(PROFILE_METADATA.audit).toBeDefined();
+    expect(PROFILE_METADATA.audit.description).toContain("audit");
+    expect(PROFILE_METADATA.audit.moduleCount).toBe(
+      ASSESSMENT_PROFILES.audit.length,
     );
   });
 });

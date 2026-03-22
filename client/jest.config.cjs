@@ -3,7 +3,14 @@ module.exports = {
   testEnvironment: "jsdom",
   roots: ["<rootDir>/src"],
   testMatch: ["**/__tests__/**/*.ts?(x)", "**/?(*.)+(spec|test).ts?(x)"],
-  testPathIgnorePatterns: ["/node_modules/", "testbed-config\\.ts$"],
+  testPathIgnorePatterns: [
+    "/node_modules/",
+    "/dist/",
+    "/bin/",
+    "/e2e/",
+    "testbed-config\\.ts$",
+    "\\.config\\.(js|ts|cjs|mjs)$",
+  ],
   transform: {
     "^.+\\.tsx?$": [
       "ts-jest",
@@ -13,7 +20,15 @@ module.exports = {
         tsconfig: "tsconfig.jest.json",
       },
     ],
+    "^.+\\.m?js$": [
+      "ts-jest",
+      {
+        tsconfig: "tsconfig.jest.json",
+      },
+    ],
   },
+  extensionsToTreatAsEsm: [".ts", ".tsx"],
+  transformIgnorePatterns: ["node_modules/(?!(@modelcontextprotocol)/)"],
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/src/$1",
     "\\.(css|less|scss|sass)$": "identity-obj-proxy",

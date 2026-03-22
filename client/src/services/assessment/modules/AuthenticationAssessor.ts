@@ -466,7 +466,9 @@ export class AuthenticationAssessor extends BaseAssessor {
     const securePatterns: string[] = [];
 
     // Check transport config from context
-    const transportConfig = context.transportConfig;
+    const transportConfig = context.transportConfig as
+      | { usesTLS?: boolean; type?: string }
+      | undefined;
     const usesTLS = transportConfig?.usesTLS ?? false;
     const tlsEnforced = transportConfig?.type === "streamable-http" && usesTLS;
 

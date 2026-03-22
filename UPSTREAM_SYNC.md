@@ -7,9 +7,9 @@ This document tracks the integration points between the upstream MCP Inspector a
 | Field                   | Value                                             |
 | ----------------------- | ------------------------------------------------- |
 | **Upstream Repository** | https://github.com/modelcontextprotocol/inspector |
-| **Last Sync Version**   | v0.18.0                                           |
-| **Last Sync Date**      | 2025-12-23                                        |
-| **Last Sync Commit**    | `fe393e514a2921fea58f16aa310563b5c5d0ee8e`        |
+| **Last Sync Version**   | v0.21.1                                           |
+| **Last Sync Date**      | 2026-03-22                                        |
+| **Last Sync Commit**    | `7c8b031ffac663031ee5a0d0a7dc79735321c2d1`        |
 
 ## Integration Points
 
@@ -253,4 +253,4 @@ To further reduce sync friction:
 
 ---
 
-_Last updated: 2025-12-27_
+_Last updated: 2026-03-22_

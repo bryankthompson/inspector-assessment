@@ -114,12 +114,18 @@ jest.unstable_mockModule("../../lib/jsonl-events.js", () => ({
   emitAnnotationReviewRecommended: jest.fn(),
   emitAnnotationAligned: jest.fn(),
   emitModulesConfigured: mockEmitModulesConfigured,
-  emitNativeModuleWarning: jest.fn(),
   // Phase 7 events
   emitPhaseStarted: jest.fn(),
   emitPhaseComplete: jest.fn(),
   emitToolTestComplete: jest.fn(),
   emitValidationSummary: jest.fn(),
+  // Tiered output and native module events
+  emitTieredOutput: jest.fn(),
+  emitNativeModuleWarning: jest.fn(),
+  // Core utilities
+  emitJSONL: jest.fn(),
+  extractToolParams: jest.fn().mockReturnValue([]),
+  SCHEMA_VERSION: 3,
 }));
 
 jest.unstable_mockModule("fs", () => ({
