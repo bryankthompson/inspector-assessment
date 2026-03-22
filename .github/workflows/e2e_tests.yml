@@ -50,7 +50,10 @@ jobs:
 
       - name: Run Playwright tests
         id: playwright-tests
-        run: npm run test:e2e
+        run: |
+          # Clean Vite temp directory to avoid EACCES from stale cache
+          rm -rf client/node_modules/.vite-temp
+          npm run test:e2e
 
       - name: Upload Playwright Report and Screenshots
         uses: actions/upload-artifact@v6

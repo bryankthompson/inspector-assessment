@@ -36,7 +36,7 @@ describe("CodeReviewClient - Integration Tests", () => {
 
       const createSpy = vi
         .spyOn(client["client"].messages, "create")
-        .mockResolvedValue(mockResponse);
+        .mockResolvedValue(mockResponse as any);
 
       const diff: PRDiff = {
         files: [
@@ -141,7 +141,7 @@ describe("CodeReviewClient - Integration Tests", () => {
 
       const createSpy = vi
         .spyOn(customClient["client"].messages, "create")
-        .mockResolvedValue(mockResponse);
+        .mockResolvedValue(mockResponse as any);
 
       const diff: PRDiff = {
         files: [
@@ -211,7 +211,7 @@ describe("CodeReviewClient - Integration Tests", () => {
 
       const createSpy = vi
         .spyOn(client["client"].messages, "create")
-        .mockResolvedValue(mockResponse);
+        .mockResolvedValue(mockResponse as any);
 
       const diff: PRDiff = {
         files: [
@@ -279,7 +279,7 @@ describe("CodeReviewClient - Integration Tests", () => {
 
       const createSpy = vi
         .spyOn(customClient["client"].messages, "create")
-        .mockResolvedValue(mockResponse);
+        .mockResolvedValue(mockResponse as any);
 
       const largePatch = "a".repeat(200);
 

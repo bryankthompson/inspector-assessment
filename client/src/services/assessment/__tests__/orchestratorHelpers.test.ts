@@ -420,6 +420,7 @@ describe("buildAUPEnrichment", () => {
             },
           },
           // flagsForReview missing
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } as any,
       });
 

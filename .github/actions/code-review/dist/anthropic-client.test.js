@@ -379,6 +379,223 @@ describe("CodeReviewClient - JSON Extraction and Validation (TEST-REQ-002, TEST-
       const result = await client.reviewDiff(diff);
       expect(result.summary).toBe("Plain JSON test");
     });
+    // Issue #130 (FIX-001): Tests for whitespace before closing fence
+    // Validates fix in anthropic-client.ts line 119-121 (regex update)
+    it("should handle single space before closing fence (TEST-REQ-001)", async () => {
+      const jsonContent = {
+        summary: "Single space before fence",
+        findings: [],
+      };
+      const mockResponse = {
+        id: "msg_123",
+        type: "message",
+        role: "assistant",
+        content: [
+          {
+            type: "text",
+            text: "```json\n" + JSON.stringify(jsonContent) + "\n ```", // Single space before closing
+          },
+        ],
+        model: "claude-sonnet-4-20250514",
+        stop_reason: "end_turn",
+        stop_sequence: null,
+        usage: {
+          input_tokens: 100,
+          output_tokens: 50,
+        },
+      };
+      vi.spyOn(client["client"].messages, "create").mockResolvedValue(
+        mockResponse,
+      );
+      const diff = {
+        files: [
+          {
+            filename: "test.js",
+            status: "modified",
+            additions: 1,
+            deletions: 0,
+            patch: "test",
+          },
+        ],
+        totalAdditions: 1,
+        totalDeletions: 0,
+      };
+      const result = await client.reviewDiff(diff);
+      expect(result.summary).toBe("Single space before fence");
+    });
+    it("should handle multiple spaces before closing fence (TEST-REQ-001)", async () => {
+      const jsonContent = {
+        summary: "Multiple spaces before fence",
+        findings: [],
+      };
+      const mockResponse = {
+        id: "msg_123",
+        type: "message",
+        role: "assistant",
+        content: [
+          {
+            type: "text",
+            text: "```json\n" + JSON.stringify(jsonContent) + "\n    ```", // Four spaces before closing
+          },
+        ],
+        model: "claude-sonnet-4-20250514",
+        stop_reason: "end_turn",
+        stop_sequence: null,
+        usage: {
+          input_tokens: 100,
+          output_tokens: 50,
+        },
+      };
+      vi.spyOn(client["client"].messages, "create").mockResolvedValue(
+        mockResponse,
+      );
+      const diff = {
+        files: [
+          {
+            filename: "test.js",
+            status: "modified",
+            additions: 1,
+            deletions: 0,
+            patch: "test",
+          },
+        ],
+        totalAdditions: 1,
+        totalDeletions: 0,
+      };
+      const result = await client.reviewDiff(diff);
+      expect(result.summary).toBe("Multiple spaces before fence");
+    });
+    it("should handle tab before closing fence (TEST-REQ-001)", async () => {
+      const jsonContent = {
+        summary: "Tab before fence",
+        findings: [],
+      };
+      const mockResponse = {
+        id: "msg_123",
+        type: "message",
+        role: "assistant",
+        content: [
+          {
+            type: "text",
+            text: "```json\n" + JSON.stringify(jsonContent) + "\n\t```", // Tab before closing
+          },
+        ],
+        model: "claude-sonnet-4-20250514",
+        stop_reason: "end_turn",
+        stop_sequence: null,
+        usage: {
+          input_tokens: 100,
+          output_tokens: 50,
+        },
+      };
+      vi.spyOn(client["client"].messages, "create").mockResolvedValue(
+        mockResponse,
+      );
+      const diff = {
+        files: [
+          {
+            filename: "test.js",
+            status: "modified",
+            additions: 1,
+            deletions: 0,
+            patch: "test",
+          },
+        ],
+        totalAdditions: 1,
+        totalDeletions: 0,
+      };
+      const result = await client.reviewDiff(diff);
+      expect(result.summary).toBe("Tab before fence");
+    });
+    it("should handle excessive whitespace before closing fence (TEST-REQ-002)", async () => {
+      const jsonContent = {
+        summary: "Excessive whitespace before fence",
+        findings: [],
+      };
+      const mockResponse = {
+        id: "msg_123",
+        type: "message",
+        role: "assistant",
+        content: [
+          {
+            type: "text",
+            text:
+              "```json\n" +
+              JSON.stringify(jsonContent) +
+              "\n" +
+              " ".repeat(50) +
+              "```", // 50 spaces before closing
+          },
+        ],
+        model: "claude-sonnet-4-20250514",
+        stop_reason: "end_turn",
+        stop_sequence: null,
+        usage: {
+          input_tokens: 100,
+          output_tokens: 50,
+        },
+      };
+      vi.spyOn(client["client"].messages, "create").mockResolvedValue(
+        mockResponse,
+      );
+      const diff = {
+        files: [
+          {
+            filename: "test.js",
+            status: "modified",
+            additions: 1,
+            deletions: 0,
+            patch: "test",
+          },
+        ],
+        totalAdditions: 1,
+        totalDeletions: 0,
+      };
+      const result = await client.reviewDiff(diff);
+      expect(result.summary).toBe("Excessive whitespace before fence");
+    });
+    it("should handle no whitespace before closing fence (TEST-REQ-002 backward compatibility)", async () => {
+      const jsonContent = {
+        summary: "No whitespace before fence",
+        findings: [],
+      };
+      const mockResponse = {
+        id: "msg_123",
+        type: "message",
+        role: "assistant",
+        content: [
+          {
+            type: "text",
+            text: "```json\n" + JSON.stringify(jsonContent) + "\n```", // No whitespace before closing (standard format)
+          },
+        ],
+        model: "claude-sonnet-4-20250514",
+        stop_reason: "end_turn",
+        stop_sequence: null,
+        usage: {
+          input_tokens: 100,
+          output_tokens: 50,
+        },
+      };
+      vi.spyOn(client["client"].messages, "create").mockResolvedValue(
+        mockResponse,
+      );
+      const diff = {
+        files: [
+          {
+            filename: "test.js",
+            status: "modified",
+            additions: 1,
+            deletions: 0,
+            patch: "test",
+          },
+        ],
+        totalAdditions: 1,
+        totalDeletions: 0,
+      };
+      const result = await client.reviewDiff(diff);
+      expect(result.summary).toBe("No whitespace before fence");
+    });
     it("should handle empty findings array", async () => {
       const mockResponse = {
         id: "msg_123",
@@ -760,8 +977,9 @@ describe("CodeReviewClient - JSON Extraction and Validation (TEST-REQ-002, TEST-
   describe("reviewDiff - Error Handling", () => {
     it("should handle rate limit errors", async () => {
       const error = new Anthropic.RateLimitError(
-        "Rate limited",
+        429,
         null,
+        "Rate limited",
         undefined,
       );
       vi.spyOn(client["client"].messages, "create").mockRejectedValue(error);
@@ -784,8 +1002,9 @@ describe("CodeReviewClient - JSON Extraction and Validation (TEST-REQ-002, TEST-
     });
     it("should handle authentication errors", async () => {
       const error = new Anthropic.AuthenticationError(
-        "Invalid API key",
+        401,
         null,
+        "Invalid API key",
         undefined,
       );
       vi.spyOn(client["client"].messages, "create").mockRejectedValue(error);

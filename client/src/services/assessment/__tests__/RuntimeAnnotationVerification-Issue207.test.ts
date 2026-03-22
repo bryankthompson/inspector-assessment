@@ -9,11 +9,7 @@
  */
 
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
-import {
-  verifyRuntimeAnnotations,
-  type RuntimeAnnotationVerification,
-  type AnnotationLocation,
-} from "../helpers/RuntimeAnnotationVerifier";
+import { verifyRuntimeAnnotations } from "../helpers/RuntimeAnnotationVerifier";
 import { extractAnnotations } from "../modules/annotations/AlignmentChecker";
 import { ToolAnnotationAssessor } from "../modules/ToolAnnotationAssessor";
 import {
@@ -503,6 +499,7 @@ describe("Runtime Annotation Verification - Issue #207/#204", () => {
 
   describe("GAP-002 (HIGH): Null/undefined tools array handling", () => {
     it("should return safe default for null tools array", () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const result = verifyRuntimeAnnotations(null as any);
 
       expect(result.verified).toBe(true);
@@ -514,6 +511,7 @@ describe("Runtime Annotation Verification - Issue #207/#204", () => {
     });
 
     it("should return safe default for undefined tools array", () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const result = verifyRuntimeAnnotations(undefined as any);
 
       expect(result.verified).toBe(true);
@@ -554,6 +552,7 @@ describe("Runtime Annotation Verification - Issue #207/#204", () => {
           annotations: {
             customField: "value",
             anotherField: 123,
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
           } as any,
         } as unknown as Tool,
       ];

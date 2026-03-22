@@ -15,7 +15,6 @@ import {
   getNativeModulesByCategory,
   NATIVE_MODULES,
   ALL_NATIVE_MODULES,
-  type NativeModule,
 } from "../nativeModules";
 
 describe("nativeModules", () => {

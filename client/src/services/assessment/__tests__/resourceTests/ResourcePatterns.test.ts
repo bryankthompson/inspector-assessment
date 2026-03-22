@@ -325,7 +325,7 @@ describe("ResourcePatterns - MIME_MAGIC_BYTES", () => {
 
   it("should conform to MagicBytesInfo interface", () => {
     Object.entries(MIME_MAGIC_BYTES).forEach(
-      ([mime, info]: [string, MagicBytesInfo]) => {
+      ([_mime, info]: [string, MagicBytesInfo]) => {
         expect(info).toHaveProperty("bytes");
         expect(info).toHaveProperty("description");
         expect(Array.isArray(info.bytes)).toBe(true);

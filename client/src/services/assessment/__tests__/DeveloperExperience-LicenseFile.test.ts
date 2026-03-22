@@ -32,7 +32,7 @@ const createConfig = (
 });
 
 // Helper to create a mock tool
-const createTool = (name: string, description?: string) => ({
+const _createTool = (name: string, description?: string) => ({
   name,
   description: description || `Tool ${name} for testing`,
   inputSchema: { type: "object", properties: {} },

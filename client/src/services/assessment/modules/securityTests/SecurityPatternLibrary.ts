@@ -158,7 +158,7 @@ export function isPayloadPartiallyEchoed(
   // Check if multiple distinct segments of payload appear
   // (handles modified/escaped payloads like URL encoding)
   const segments = lowerPayload
-    .split(/[\s<>'"&;:\/\\]+/)
+    .split(/[\s<>'"&;:/\\]+/)
     .filter((s) => s.length > 5);
 
   if (segments.length > 0) {

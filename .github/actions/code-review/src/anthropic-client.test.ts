@@ -173,7 +173,7 @@ describe("CodeReviewClient - JSON Extraction and Validation (TEST-REQ-002, TEST-
       };
 
       vi.spyOn(client["client"].messages, "create").mockResolvedValue(
-        mockResponse,
+        mockResponse as any,
       );
 
       const diff: PRDiff = {
@@ -224,7 +224,7 @@ describe("CodeReviewClient - JSON Extraction and Validation (TEST-REQ-002, TEST-
       };
 
       vi.spyOn(client["client"].messages, "create").mockResolvedValue(
-        mockResponse,
+        mockResponse as any,
       );
 
       const diff: PRDiff = {
@@ -273,7 +273,7 @@ describe("CodeReviewClient - JSON Extraction and Validation (TEST-REQ-002, TEST-
       };
 
       vi.spyOn(client["client"].messages, "create").mockResolvedValue(
-        mockResponse,
+        mockResponse as any,
       );
 
       const diff: PRDiff = {
@@ -322,7 +322,7 @@ describe("CodeReviewClient - JSON Extraction and Validation (TEST-REQ-002, TEST-
       };
 
       vi.spyOn(client["client"].messages, "create").mockResolvedValue(
-        mockResponse,
+        mockResponse as any,
       );
 
       const diff: PRDiff = {
@@ -370,7 +370,7 @@ describe("CodeReviewClient - JSON Extraction and Validation (TEST-REQ-002, TEST-
       };
 
       vi.spyOn(client["client"].messages, "create").mockResolvedValue(
-        mockResponse,
+        mockResponse as any,
       );
 
       const diff: PRDiff = {
@@ -418,7 +418,7 @@ describe("CodeReviewClient - JSON Extraction and Validation (TEST-REQ-002, TEST-
       };
 
       vi.spyOn(client["client"].messages, "create").mockResolvedValue(
-        mockResponse,
+        mockResponse as any,
       );
 
       const diff: PRDiff = {
@@ -468,7 +468,7 @@ describe("CodeReviewClient - JSON Extraction and Validation (TEST-REQ-002, TEST-
       };
 
       vi.spyOn(client["client"].messages, "create").mockResolvedValue(
-        mockResponse,
+        mockResponse as any,
       );
 
       const diff: PRDiff = {
@@ -516,7 +516,7 @@ describe("CodeReviewClient - JSON Extraction and Validation (TEST-REQ-002, TEST-
       };
 
       vi.spyOn(client["client"].messages, "create").mockResolvedValue(
-        mockResponse,
+        mockResponse as any,
       );
 
       const diff: PRDiff = {
@@ -564,7 +564,7 @@ describe("CodeReviewClient - JSON Extraction and Validation (TEST-REQ-002, TEST-
       };
 
       vi.spyOn(client["client"].messages, "create").mockResolvedValue(
-        mockResponse,
+        mockResponse as any,
       );
 
       const diff: PRDiff = {
@@ -617,7 +617,7 @@ describe("CodeReviewClient - JSON Extraction and Validation (TEST-REQ-002, TEST-
       };
 
       vi.spyOn(client["client"].messages, "create").mockResolvedValue(
-        mockResponse,
+        mockResponse as any,
       );
 
       const diff: PRDiff = {
@@ -665,7 +665,7 @@ describe("CodeReviewClient - JSON Extraction and Validation (TEST-REQ-002, TEST-
       };
 
       vi.spyOn(client["client"].messages, "create").mockResolvedValue(
-        mockResponse,
+        mockResponse as any,
       );
 
       const diff: PRDiff = {
@@ -711,7 +711,7 @@ describe("CodeReviewClient - JSON Extraction and Validation (TEST-REQ-002, TEST-
       };
 
       vi.spyOn(client["client"].messages, "create").mockResolvedValue(
-        mockResponse,
+        mockResponse as any,
       );
 
       const diff: PRDiff = {
@@ -757,7 +757,7 @@ describe("CodeReviewClient - JSON Extraction and Validation (TEST-REQ-002, TEST-
       };
 
       vi.spyOn(client["client"].messages, "create").mockResolvedValue(
-        mockResponse,
+        mockResponse as any,
       );
 
       const diff: PRDiff = {
@@ -803,7 +803,7 @@ describe("CodeReviewClient - JSON Extraction and Validation (TEST-REQ-002, TEST-
       };
 
       vi.spyOn(client["client"].messages, "create").mockResolvedValue(
-        mockResponse,
+        mockResponse as any,
       );
 
       const diff: PRDiff = {
@@ -857,7 +857,7 @@ describe("CodeReviewClient - JSON Extraction and Validation (TEST-REQ-002, TEST-
       };
 
       vi.spyOn(client["client"].messages, "create").mockResolvedValue(
-        mockResponse,
+        mockResponse as any,
       );
 
       const diff: PRDiff = {
@@ -941,7 +941,7 @@ describe("CodeReviewClient - JSON Extraction and Validation (TEST-REQ-002, TEST-
       };
 
       vi.spyOn(client["client"].messages, "create").mockResolvedValue(
-        mockResponse,
+        mockResponse as any,
       );
 
       const diff: PRDiff = {
@@ -1001,7 +1001,7 @@ describe("CodeReviewClient - JSON Extraction and Validation (TEST-REQ-002, TEST-
       };
 
       vi.spyOn(client["client"].messages, "create").mockResolvedValue(
-        mockResponse,
+        mockResponse as any,
       );
 
       const diff: PRDiff = {
@@ -1065,7 +1065,7 @@ describe("CodeReviewClient - JSON Extraction and Validation (TEST-REQ-002, TEST-
       };
 
       vi.spyOn(client["client"].messages, "create").mockResolvedValue(
-        mockResponse,
+        mockResponse as any,
       );
 
       const diff: PRDiff = {
@@ -1099,9 +1099,10 @@ describe("CodeReviewClient - JSON Extraction and Validation (TEST-REQ-002, TEST-
 
   describe("reviewDiff - Error Handling", () => {
     it("should handle rate limit errors", async () => {
-      const error = new Anthropic.RateLimitError(
+      const error = new (Anthropic.RateLimitError as any)(
+        429,
+        null,
         "Rate limited",
-        null as never,
         undefined,
       );
       vi.spyOn(client["client"].messages, "create").mockRejectedValue(error);
@@ -1126,9 +1127,10 @@ describe("CodeReviewClient - JSON Extraction and Validation (TEST-REQ-002, TEST-
     });
 
     it("should handle authentication errors", async () => {
-      const error = new Anthropic.AuthenticationError(
+      const error = new (Anthropic.AuthenticationError as any)(
+        401,
+        null,
         "Invalid API key",
-        null as never,
         undefined,
       );
       vi.spyOn(client["client"].messages, "create").mockRejectedValue(error);

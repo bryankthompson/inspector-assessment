@@ -33,25 +33,19 @@ import {
 } from "../../client/lib/lib/assessmentTypes.js";
 import { FULL_CLAUDE_CODE_CONFIG } from "../../client/lib/services/assessment/lib/claudeCodeBridge.js";
 
+// Use modular CLI parser with full flag support (30+ flags)
+import {
+  parseArgs,
+  printHelp,
+  type AssessmentOptions,
+} from "./lib/cli-parser.js";
+
 interface ServerConfig {
   transport?: "stdio" | "http" | "sse";
   command?: string;
   args?: string[];
   env?: Record<string, string>;
   url?: string;
-}
-
-interface AssessmentOptions {
-  serverName: string;
-  serverConfigPath?: string;
-  outputPath?: string;
-  sourceCodePath?: string;
-  claudeEnabled?: boolean;
-  fullAssessment?: boolean;
-  auditMode?: boolean;
-  verbose?: boolean;
-  jsonOnly?: boolean;
-  helpRequested?: boolean;
 }
 
 /**
@@ -345,10 +339,18 @@ async function runFullAssessment(
     console.log(`\n🔍 Starting full assessment for: ${options.serverName}`);
   }
 
-  const serverConfig = loadServerConfig(
-    options.serverName,
-    options.serverConfigPath,
-  );
+  // Build server config from --http/--sse flags or config file
+  let serverConfig: ServerConfig;
+  if (options.httpUrl) {
+    serverConfig = { transport: "http", url: options.httpUrl };
+  } else if (options.sseUrl) {
+    serverConfig = { transport: "sse", url: options.sseUrl };
+  } else {
+    serverConfig = loadServerConfig(
+      options.serverName,
+      options.serverConfigPath,
+    );
+  }
 
   if (!options.jsonOnly) {
     console.log("✅ Server config loaded");
@@ -588,130 +590,17 @@ function displaySummary(results: MCPDirectoryAssessment) {
 }
 
 /**
- * Parse command-line arguments
- */
-function parseArgs(): AssessmentOptions {
-  const args = process.argv.slice(2);
-  const options: Partial<AssessmentOptions> = {};
-
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i];
-    if (!arg) continue;
-
-    switch (arg) {
-      case "--server":
-      case "-s":
-        options.serverName = args[++i];
-        break;
-      case "--config":
-      case "-c":
-        options.serverConfigPath = args[++i];
-        break;
-      case "--output":
-      case "-o":
-        options.outputPath = args[++i];
-        break;
-      case "--source":
-        options.sourceCodePath = args[++i];
-        break;
-      case "--claude-enabled":
-        options.claudeEnabled = true;
-        break;
-      case "--full":
-        options.fullAssessment = true;
-        break;
-      case "--audit-mode":
-        options.auditMode = true;
-        break;
-      case "--verbose":
-      case "-v":
-        options.verbose = true;
-        break;
-      case "--json":
-        options.jsonOnly = true;
-        break;
-      case "--help":
-      case "-h":
-        printHelp();
-        options.helpRequested = true;
-        return options as AssessmentOptions;
-      default:
-        if (!arg.startsWith("-")) {
-          if (!options.serverName) {
-            options.serverName = arg;
-          }
-        } else {
-          console.error(`Unknown argument: ${arg}`);
-          printHelp();
-          setTimeout(() => process.exit(1), 10);
-          options.helpRequested = true;
-          return options as AssessmentOptions;
-        }
-    }
-  }
-
-  if (!options.serverName) {
-    console.error("Error: --server is required");
-    printHelp();
-    setTimeout(() => process.exit(1), 10);
-    options.helpRequested = true;
-    return options as AssessmentOptions;
-  }
-
-  return options as AssessmentOptions;
-}
-
-/**
- * Print help message
- */
-function printHelp() {
-  console.log(`
-Usage: mcp-assess-full [options] [server-name]
-
-Run comprehensive MCP server assessment with all 11 assessor modules.
-
-Options:
-  --server, -s <name>    Server name (required, or pass as first positional arg)
-  --config, -c <path>    Path to server config JSON
-  --output, -o <path>    Output JSON path (default: /tmp/inspector-full-assessment-<server>.json)
-  --source <path>        Source code path for deep analysis (AUP, portability, etc.)
-  --claude-enabled       Enable Claude Code integration for intelligent analysis
-  --full                 Enable all assessment modules (default)
-  --audit-mode           Run only high-value modules for automated MCP auditing
-                         (Functionality, Security, ErrorHandling, MCPSpecCompliance, ToolAnnotations)
-                         Reduces false positives and includes audit summary in output
-  --json                 Output only JSON (no console summary)
-  --verbose, -v          Enable verbose logging
-  --help, -h             Show this help message
-
-Assessment Modules (11 total):
-  • Functionality      - Tests all tools work correctly
-  • Security           - Prompt injection & vulnerability testing
-  • Documentation      - README completeness checks
-  • Error Handling     - Validates error responses
-  • Usability          - Input validation & UX
-  • MCP Spec           - Protocol compliance
-  • AUP Compliance     - Acceptable Use Policy checks
-  • Tool Annotations   - readOnlyHint/destructiveHint validation
-  • Prohibited Libs    - Dependency security checks
-  • Manifest           - MCPB manifest.json validation
-  • Portability        - Cross-platform compatibility
-
-Examples:
-  mcp-assess-full my-server
-  mcp-assess-full --server broken-mcp --claude-enabled
-  mcp-assess-full --server my-server --source ./my-server --output ./results.json
-  `);
-}
-
-/**
  * Main execution
  */
 async function main() {
   try {
     const options = parseArgs();
 
-    if (options.helpRequested) {
+    if (
+      options.helpRequested ||
+      options.versionRequested ||
+      options.listModules
+    ) {
       return;
     }
 
@@ -722,15 +611,17 @@ async function main() {
     }
 
     // Determine transport type for audit summary
-    const serverConfig = loadServerConfig(
-      options.serverName,
-      options.serverConfigPath,
-    );
+    const transportType = options.httpUrl
+      ? "http"
+      : options.sseUrl
+        ? "sse"
+        : loadServerConfig(options.serverName, options.serverConfigPath)
+            .transport || "stdio";
     const outputPath = saveResults(
       options.serverName,
       results,
       options.outputPath,
-      serverConfig.transport || "stdio",
+      transportType,
     );
 
     if (options.jsonOnly) {
