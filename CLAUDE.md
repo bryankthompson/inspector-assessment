@@ -14,9 +14,9 @@
 - Development mode: `npm run dev` (use `npm run dev:windows` on Windows)
 - Format code: `npm run prettier-fix`
 - Client lint: `cd client && npm run lint`
-- Run tests: `npm test` (696 total, 669 passing, 27 timeout failures)
-- Run assessment tests: `npm test -- assessment` (208 assessment module tests)
-- Note: 27 test failures are SecurityAssessor timeout issues (480s limit), not logic errors
+- Run client tests: `cd client && npx jest --config jest.config.cjs` (6031 total, 5871 passing, 39 timeout failures)
+- Run CLI tests: `cd cli && npm test` (948 total, 899 passing, 49 skipped)
+- Note: 39 client test failures are SecurityAssessor timeout issues (480s limit), not logic errors
 
 ## Code Style Guidelines
 
@@ -219,8 +219,8 @@ Key references:
 
 **Testing:**
 
-- `client/src/services/__tests__/` - 696 total tests (669 passing, 27 timeout failures)
-- `client/src/services/assessment/__tests__/` - 208 assessment module tests
+- `client/src/services/__tests__/` - 6031 total tests (5871 passing, 39 timeout failures)
+- `cli/src/__tests__/` - 948 CLI tests (899 passing, 49 skipped)
 
 ## Development Workflow
 
@@ -348,7 +348,7 @@ This file contains archived project timeline entries from earlier development ph
 ## npm Package Publishing & Maintenance
 
 **Package**: `@bryan-thompson/inspector-assessment`
-**Current Version**: 1.0.1
+**Current Version**: 1.43.5
 **Published**: 2025-10-11 (v1.0.0), 2025-10-11 (v1.0.1)
 **Registry**: https://www.npmjs.com/package/@bryan-thompson/inspector-assessment
 
@@ -500,8 +500,8 @@ See the npm publishing section above for detailed publishing documentation.
 
 ## Upstream Sync Status
 
-- **Current Version**: 0.17.5
-- **Last Sync**: 2025-12-07 (270+ commits from v0.17.0, synced to v0.17.5)
+- **Current Version**: v0.21.1
+- **Last Sync**: 2026-03-22 (105 commits from v0.18.0, synced to v0.21.1)
 - **Fork**: triepod-ai/inspector-assessment
 - **Upstream**: modelcontextprotocol/inspector
 - See [PROJECT_STATUS.md](PROJECT_STATUS.md) for sync history

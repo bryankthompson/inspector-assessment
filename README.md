@@ -82,15 +82,14 @@ We've built a comprehensive assessment framework on top of the original inspecto
 
 Our enhanced fork maintains high code quality standards with comprehensive testing and validation:
 
-- **Test Coverage**: ✅ 665/665 tests passing (100% pass rate)
-  - **Assessment Module Tests**: 291 tests specifically validating our assessment enhancements (including 83 new MCP Directory compliance tests)
+- **Test Coverage**: ✅ 6031 client tests (5871 passing) + 948 CLI tests (899 passing)
+  - **Client Tests**: Assessment modules, UI components, and core inspector functionality
     - Business logic error detection with confidence scoring
     - Progressive complexity testing (2 levels: minimal → simple)
     - Context-aware security testing with zero false positives
     - Realistic test data generation and boundary testing
-  - **Total Project Tests**: 582 tests including assessment modules, UI components, and core inspector functionality
-- All tests updated to reflect focused backend testing (8 security patterns × 3 payloads per tool)
-  - Test files: `client/src/services/__tests__/` and `client/src/services/assessment/__tests__/`
+  - **CLI Tests**: Assessment runner, profiles, transport, security patterns
+  - Test files: `client/src/services/__tests__/`, `client/src/services/assessment/__tests__/`, `cli/src/__tests__/`
 - **Code Quality**: ✅ Production code uses proper TypeScript types
   - 229 lint issues remaining (down 18% from 280 after recent cleanup)
   - All source files migrated from `any` to `unknown` or proper types
@@ -98,16 +97,16 @@ Our enhanced fork maintains high code quality standards with comprehensive testi
 - **Build Status**: ✅ Production builds pass cleanly
   - TypeScript compilation successful for all production code
   - Vite build optimized and validated
-- **Upstream Sync**: ✅ Up-to-date with v0.17.0
-  - Successfully integrated 121 commits from upstream
-  - New features: CustomHeaders, OAuth improvements, parameter validation
-  - All enhancements preserved during merge
+- **Upstream Sync**: ✅ Up-to-date with v0.21.1
+  - Successfully integrated 105 commits from upstream (2026-03-22)
+  - New features: Tasks tab, Apps tab, Metadata tab, vitest CLI tests
+  - All assessment enhancements preserved (CLI-first architecture)
 
 **Testing Commands**:
 
 ```bash
-npm test                         # Run all 665 tests
-npm test -- assessment           # Run all 291 assessment module tests
+cd client && npx jest --config jest.config.cjs  # Run 6031 client tests
+cd cli && npm test                              # Run 948 CLI tests
 npm test -- assessmentService    # Run assessment service integration tests (54 tests)
 npm test -- SecurityAssessor     # Run security assessment tests (16 tests)
 npm test -- FunctionalityAssessor # Run functionality tests (11 tests)
@@ -481,12 +480,12 @@ Our assessment capabilities are backed by a comprehensive test suite that valida
 
 **Test Coverage Summary**:
 
-- **665 passing tests** across all project modules (100% pass rate)
-- **291 assessment module tests** specifically created for validation of our enhancements
+- **6031 client tests** (5871 passing) + **948 CLI tests** (899 passing)
+- Comprehensive assessment coverage across both client and CLI workspaces
 
 #### Assessment Module Test Breakdown
 
-The assessment functionality is validated by **291 specialized tests** across 19 test files:
+The assessment functionality is validated by specialized tests across client and CLI workspaces:
 
 | Test File                             | Tests   | Purpose                          |
 | ------------------------------------- | ------- | -------------------------------- |

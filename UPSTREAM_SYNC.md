@@ -13,95 +13,19 @@ This document tracks the integration points between the upstream MCP Inspector a
 
 ## Integration Points
 
-### File: `client/src/App.tsx`
+### Architecture: CLI-First (v0.21.1+)
 
-This is the **only upstream file** that requires modifications for assessment integration.
+As of the v0.21.1 sync (2026-03-22), **App.tsx has zero assessment integration**. The GUI assessment tab was removed — upstream App.tsx is accepted wholesale during syncs. The CLI (`cli/src/`) is now the sole assessment interface.
 
-| Line      | Type   | Description                                                                |
-| --------- | ------ | -------------------------------------------------------------------------- |
-| 59        | Import | `ClipboardCheck` icon from lucide-react                                    |
-| 75        | Import | `import AssessmentTab from "./components/AssessmentTab";`                  |
-| 129       | State  | `const [isLoadingTools, setIsLoadingTools] = useState(false);`             |
-| 372       | Array  | `...(serverCapabilities?.tools ? ["assessment"] : []),` in `availableTabs` |
-| 1024-1036 | Logic  | Auto-load tools when assessment tab is selected                            |
-| 1061-1067 | JSX    | `<TabsTrigger value="assessment">` with ClipboardCheck icon                |
-| 1236-1249 | JSX    | `<AssessmentTab>` component rendering                                      |
+**No upstream files require modification for assessment integration.** All assessment code lives in fork-only files (listed below) with zero overlap with upstream.
 
-### Detailed Changes
+### Historical Note
 
-#### 1. Import Section (Lines 59, 75)
+Prior to v0.21.1, App.tsx had 7 integration points for a GUI assessment tab. These were removed because:
 
-```typescript
-// Line 59 - Add to lucide-react imports
-  ClipboardCheck,
-
-// Line 75 - Add component import
-import AssessmentTab from "./components/AssessmentTab";
-```
-
-#### 2. State Declaration (Line 129)
-
-```typescript
-const [isLoadingTools, setIsLoadingTools] = useState(false);
-```
-
-#### 3. Available Tabs Array (Line 372)
-
-```typescript
-const availableTabs = [
-  "resources",
-  "prompts",
-  "tools",
-  ...(serverCapabilities?.tools ? ["assessment"] : []), // <-- ADD THIS
-  // ... rest of tabs
-];
-```
-
-#### 4. Tab Value Change Handler (Lines 1024-1036)
-
-```typescript
-// Auto-load tools when assessment tab is selected
-if (value === "assessment" && tools.length === 0 && serverCapabilities?.tools) {
-  try {
-    clearError("tools");
-    await listTools();
-  } catch (error) {
-    console.error("Failed to auto-load tools:", error);
-  }
-}
-```
-
-#### 5. Tab Trigger (Lines 1061-1067)
-
-```typescript
-<TabsTrigger
-  value="assessment"
-  disabled={!serverCapabilities?.tools}
->
-  <ClipboardCheck className="w-4 h-4 mr-2" />
-  Assessment
-</TabsTrigger>
-```
-
-#### 6. Tab Content (Lines 1236-1249)
-
-```typescript
-<AssessmentTab
-  tools={tools}
-  isLoadingTools={isLoadingTools}
-  listTools={() => {
-    clearError("tools");
-    listTools();
-  }}
-  callTool={async (name, params) => {
-    const result = await callTool(name, params);
-    return result;
-  }}
-  serverName={
-    transportType === "stdio" ? command || "MCP Server" : ""
-  }
-/>
-```
+- The CLI is the published npm interface (`@bryan-thompson/inspector-assessment`)
+- Accepting upstream App.tsx wholesale eliminates all merge conflicts
+- The GUI tab was not actively maintained
 
 ## Files Added (No Conflict Risk)
 
@@ -227,29 +151,24 @@ The script automatically:
 
 2. **Test assessment functionality**:
    ```bash
-   npm run dev
-   # Navigate to Assessment tab
+   npm run assess -- --server <server-name> --config <config.json>
    ```
 
 ## Risk Assessment
 
-| Integration Point    | Risk   | Notes                                |
-| -------------------- | ------ | ------------------------------------ |
-| Icon import          | Low    | Stable lucide-react API              |
-| Component import     | Low    | Additive, no conflicts expected      |
-| State declaration    | Low    | Additive, no conflicts expected      |
-| Available tabs array | Medium | May shift if upstream adds tabs      |
-| Tab change handler   | Medium | Handler logic may be refactored      |
-| TabsTrigger          | Low    | Standard pattern, unlikely to change |
-| AssessmentTab render | Low    | Additive, no conflicts expected      |
+| Area                 | Risk | Notes                                             |
+| -------------------- | ---- | ------------------------------------------------- |
+| App.tsx              | None | Accepted wholesale from upstream, zero changes    |
+| client/src/services/ | Low  | Assessment modules are fork-only, no overlap      |
+| cli/src/             | None | Entirely fork-only, no upstream equivalent        |
+| package.json files   | Low  | Fork metadata (name, version) must be kept        |
+| client/lib/ types    | Low  | Upstream SDK type changes may need `as any` casts |
 
 ## Future Improvements
 
 To further reduce sync friction:
 
-1. **Extract to integration layer**: Create `client/src/integrations/assessment.ts` to centralize all integration code
-2. **Add feature flags**: Allow assessment to be disabled via environment variable
-3. **Plugin architecture**: Enable assessment as optional npm package
+1. **Plugin architecture**: Enable assessment as optional npm package
 
 ---
 

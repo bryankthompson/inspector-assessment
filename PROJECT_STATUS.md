@@ -2,7 +2,7 @@
 
 ## Current Version
 
-- **Version**: 1.41.0 (published to npm as "@bryan-thompson/inspector-assessment")
+- **Version**: 1.43.5 (published to npm as "@bryan-thompson/inspector-assessment")
   - AUPComplianceAssessor.test.ts (+6 enrichmentData tests)
 - Updated 4 documentation files (JSONL_EVENTS_ALGORITHMS.md, JSONL_EVENTS_REFERENCE.md, ASSESSMENT_CATALOG.md, CHANGELOG.md)
 - Committed and pushed: 7add699c
