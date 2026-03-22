@@ -1980,7 +1980,7 @@ proc.stderr.on("data", (data) => {
 ### Complete Event Reference
 
 For comprehensive JSONL documentation, see:
-**[JSONL_EVENTS_API.md](./JSONL_EVENTS_API.md)**
+**[JSONL_EVENTS_REFERENCE.md](./JSONL_EVENTS_REFERENCE.md)**
 
 This document provides:
 
@@ -2546,7 +2546,7 @@ The Protocol Conformance Assessor can validate against different MCP specificati
 - Lifecycle: `https://modelcontextprotocol.io/specification/{version}/basic/lifecycle`
 - Tools: `https://modelcontextprotocol.io/specification/{version}/server/tools`
 
-See [PROTOCOL_CONFORMANCE_ASSESSOR_GUIDE.md](PROTOCOL_CONFORMANCE_ASSESSOR_GUIDE.md) for detailed configuration options.
+See [api/PROTOCOL_COMPLIANCE_ASSESSOR_API.md](api/PROTOCOL_COMPLIANCE_ASSESSOR_API.md) for detailed configuration options.
 
 ---
 
@@ -2948,7 +2948,7 @@ mcp-assess-full --server my-server --config config.json \
 
 ## Additional Resources
 
-- **JSONL Events**: [JSONL_EVENTS_API.md](./JSONL_EVENTS_API.md) - Complete event reference
+- **JSONL Events**: [JSONL_EVENTS_REFERENCE.md](./JSONL_EVENTS_REFERENCE.md) - Complete event reference
 - **Assessment Catalog**: [ASSESSMENT_CATALOG.md](./ASSESSMENT_CATALOG.md) - Module details
 - **Performance Tuning**: [PERFORMANCE_TUNING_GUIDE.md](./PERFORMANCE_TUNING_GUIDE.md) - Batch sizes, timeouts, presets
 - **Architecture Detection**: [ARCHITECTURE_DETECTION_GUIDE.md](./ARCHITECTURE_DETECTION_GUIDE.md) - Server infrastructure analysis

@@ -41,14 +41,13 @@ Integration documentation for using the npm package programmatically.
 
 ### Assessment Modules
 
-| Document                                                                      | Purpose                                                      |
-| ----------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| [Assessment Catalog](ASSESSMENT_CATALOG.md)                                   | Complete assessment module reference and tier organization   |
-| [Assessment Module Developer Guide](ASSESSMENT_MODULE_DEVELOPER_GUIDE.md)     | Creating and extending assessment modules                    |
-| [Scoring Algorithm Guide](SCORING_ALGORITHM_GUIDE.md)                         | Module weights, thresholds, calculations                     |
-| [Protocol Conformance Assessor Guide](PROTOCOL_CONFORMANCE_ASSESSOR_GUIDE.md) | Module #18: Protocol compliance, event emission, integration |
-| [Assessment Modules API](ASSESSMENT_MODULES_API.md)                           | Module API surface and interfaces                            |
-| [Assessment Modules Integration](ASSESSMENT_MODULES_INTEGRATION.md)           | Integrating modules into the orchestrator                    |
+| Document                                                                  | Purpose                                                    |
+| ------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| [Assessment Catalog](ASSESSMENT_CATALOG.md)                               | Complete assessment module reference and tier organization |
+| [Assessment Module Developer Guide](ASSESSMENT_MODULE_DEVELOPER_GUIDE.md) | Creating and extending assessment modules                  |
+| [Scoring Algorithm Guide](SCORING_ALGORITHM_GUIDE.md)                     | Module weights, thresholds, calculations                   |
+| [Assessment Modules API](ASSESSMENT_MODULES_API.md)                       | Module API surface and interfaces                          |
+| [Assessment Modules Integration](ASSESSMENT_MODULES_INTEGRATION.md)       | Integrating modules into the orchestrator                  |
 
 ### Error Handling
 
@@ -93,13 +92,10 @@ Integration documentation for using the npm package programmatically.
 
 ### Testing
 
-| Document                                                                     | Purpose                                       |
-| ---------------------------------------------------------------------------- | --------------------------------------------- |
-| [Test Utilities Reference](TEST_UTILITIES_REFERENCE.md)                      | Mock factory API for assessment testing       |
-| [Test Organization Pattern](TEST_ORGANIZATION_PATTERN.md)                    | Split test file conventions and patterns      |
-| [Test Automation Strategy (Issue #57)](TEST_AUTOMATION_STRATEGY_ISSUE_57.md) | Strategy for automated test generation        |
-| [Test Automation Implementation](TEST_AUTOMATION_IMPLEMENTATION_SUMMARY.md)  | Implementation summary for test automation    |
-| [Bug Discovery Report (Issue #57)](BUG_DISCOVERY_REPORT_ISSUE_57.md)         | Bugs found during test automation development |
+| Document                                                  | Purpose                                  |
+| --------------------------------------------------------- | ---------------------------------------- |
+| [Test Utilities Reference](TEST_UTILITIES_REFERENCE.md)   | Mock factory API for assessment testing  |
+| [Test Organization Pattern](TEST_ORGANIZATION_PATTERN.md) | Split test file conventions and patterns |
 
 ### Lessons Learned
 
@@ -117,12 +113,11 @@ Documented patterns and practices from real-world development:
 
 Real-time progress streaming for CLI/auditor integration.
 
-| Document                                               | Purpose                                   |
-| ------------------------------------------------------ | ----------------------------------------- |
-| [Event Reference](JSONL_EVENTS_REFERENCE.md)           | All 13 event types and schema definitions |
-| [Algorithms](JSONL_EVENTS_ALGORITHMS.md)               | EventBatcher and AUP enrichment           |
-| [Integration](JSONL_EVENTS_INTEGRATION.md)             | Lifecycle examples, checklist, testing    |
-| [Legacy Progress Output](REAL_TIME_PROGRESS_OUTPUT.md) | Legacy progress format (superseded)       |
+| Document                                     | Purpose                                   |
+| -------------------------------------------- | ----------------------------------------- |
+| [Event Reference](JSONL_EVENTS_REFERENCE.md) | All 13 event types and schema definitions |
+| [Algorithms](JSONL_EVENTS_ALGORITHMS.md)     | EventBatcher and AUP enrichment           |
+| [Integration](JSONL_EVENTS_INTEGRATION.md)   | Lifecycle examples, checklist, testing    |
 
 ---
 
@@ -132,18 +127,16 @@ Real-time progress streaming for CLI/auditor integration.
 | --------------------------------------------------------- | ----------------------------------------------- |
 | [Security Patterns Catalog](SECURITY_PATTERNS_CATALOG.md) | Comprehensive attack patterns and payloads      |
 | [Testbed Setup Guide](TESTBED_SETUP_GUIDE.md)             | A/B validation with vulnerable-mcp/hardened-mcp |
-| [DVMCP Usage Guide](DVMCP_USAGE_GUIDE.md)                 | Damn Vulnerable MCP educational testbed         |
 | [Security Audits](security/)                              | Security audit reports                          |
 
 ---
 
-## UI & Specifications
+## Specifications
 
-| Document                                            | Purpose                            |
-| --------------------------------------------------- | ---------------------------------- |
-| [UI Component Reference](UI_COMPONENT_REFERENCE.md) | Assessment UI architecture         |
-| [Manifest Requirements](MANIFEST_REQUIREMENTS.md)   | manifest_version 0.3 specification |
-| [MCP Spec Reference](mcp_spec_11-2025.md)           | MCP protocol revision 2025-11-25   |
+| Document                                          | Purpose                            |
+| ------------------------------------------------- | ---------------------------------- |
+| [Manifest Requirements](MANIFEST_REQUIREMENTS.md) | manifest_version 0.3 specification |
+| [MCP Spec Reference](mcp_spec_11-2025.md)         | MCP protocol revision 2025-11-25   |
 
 ---
 
@@ -151,15 +144,11 @@ Real-time progress streaming for CLI/auditor integration.
 
 ### Deprecation Documentation (v1.25.2+)
 
-Start with [Deprecation Index](DEPRECATION_INDEX.md) for navigation, then choose:
-
 | Document                                                            | Purpose                                        |
 | ------------------------------------------------------------------- | ---------------------------------------------- |
-| [Deprecation Index](DEPRECATION_INDEX.md)                           | Navigation hub for all deprecation docs        |
 | [Deprecation Guide](DEPRECATION_GUIDE.md)                           | What's deprecated, why, and migration timeline |
 | [Deprecation API Reference](DEPRECATION_API_REFERENCE.md)           | Technical reference, warning formats, testing  |
 | [Deprecation Migration Examples](DEPRECATION_MIGRATION_EXAMPLES.md) | Copy-paste ready code examples                 |
-| [Deprecation Removal Checklist](DEPRECATION_REMOVAL_CHECKLIST.md)   | Checklist for removing deprecated code         |
 
 ### General Maintenance
 
@@ -200,82 +189,6 @@ Documentation for the underlying MCP Inspector that this assessment tool builds 
 
 ---
 
-## Legacy Navigation Pages
-
-These files have been split into focused documents and now serve as navigation pages:
-
-- [TEST_DATA_GENERATION_GUIDE.md](TEST_DATA_GENERATION_GUIDE.md) → Test Data series
-- [JSONL_EVENTS_API.md](JSONL_EVENTS_API.md) → JSONL Events series
-- [RESPONSE_VALIDATION_GUIDE.md](RESPONSE_VALIDATION_GUIDE.md) → Response Validation series
-
 ---
 
-## File Organization
-
-```
-docs/
-├── README.md                               # This navigation hub
-├── examples/                               # Example configuration files
-│   ├── performance-config-default.json
-│   ├── performance-config-fast.json
-│   └── performance-config-resource-constrained.json
-├── security/                               # Security audit reports
-│   ├── README.md
-│   ├── temporal_assessor_security_audit.md
-│   └── temporal_assessor_security_summary.md
-├── lessons-learned/                        # Development lessons and patterns
-│   ├── README.md
-│   ├── type-safe-testing-patterns.md
-│   └── test-automator-implementation-guide.md
-├── BASE_INSPECTOR_GUIDE.md                 # Base inspector UI/operations
-├── FORK_HISTORY.md                         # Upstream relationship
-├── CLI_ASSESSMENT_GUIDE.md                 # CLI modes and options
-├── PROGRAMMATIC_API_GUIDE.md               # AssessmentOrchestrator usage
-├── API_REFERENCE.md                        # Complete API documentation
-├── INTEGRATION_GUIDE.md                    # Practical integration patterns
-├── TYPE_REFERENCE.md                       # TypeScript type reference
-├── LOGGING_GUIDE.md                        # Structured logging configuration
-├── ASSESSMENT_TYPES_IMPORT_GUIDE.md        # Modular types, imports, tree-shaking
-├── ASSESSMENT_CATALOG.md                   # Assessment module reference
-├── SCORING_ALGORITHM_GUIDE.md              # Scoring details
-├── ASSESSMENT_MODULE_DEVELOPER_GUIDE.md    # Module development
-├── PROTOCOL_CONFORMANCE_ASSESSOR_GUIDE.md # Module #18 integration guide
-├── ARCHITECTURE_DETECTION_GUIDE.md        # Server infrastructure analysis (#57)
-├── BEHAVIOR_INFERENCE_GUIDE.md            # Tool behavior classification (#57)
-├── PERFORMANCE_TUNING_GUIDE.md            # Assessment execution tuning (#37)
-├── TEST_DATA_ARCHITECTURE.md               # Test data core
-├── TEST_DATA_SCENARIOS.md                  # Test scenarios
-├── TEST_DATA_EXTENSION.md                  # Test data extension
-├── RESPONSE_VALIDATION_CORE.md             # Validation core
-├── RESPONSE_VALIDATION_EXTENSION.md        # Validation extension
-├── JSONL_EVENTS_REFERENCE.md               # Event types
-├── JSONL_EVENTS_ALGORITHMS.md              # Event algorithms
-├── JSONL_EVENTS_INTEGRATION.md             # Event integration
-├── SECURITY_PATTERNS_CATALOG.md            # Attack patterns
-├── TESTBED_SETUP_GUIDE.md                  # Testbed setup
-├── DVMCP_USAGE_GUIDE.md                    # DVMCP guide
-├── PROGRESSIVE_COMPLEXITY_GUIDE.md         # Progressive testing
-├── TEST_UTILITIES_REFERENCE.md             # Mock factory API
-├── TEST_ORGANIZATION_PATTERN.md            # Split test file patterns
-├── UI_COMPONENT_REFERENCE.md               # UI components (deprecated)
-├── MANIFEST_REQUIREMENTS.md                # Manifest spec
-├── DEPRECATION_INDEX.md                    # Deprecation documentation navigation hub
-├── DEPRECATION_GUIDE.md                    # Deprecations & migration paths
-├── DEPRECATION_API_REFERENCE.md            # Deprecation system technical reference
-├── DEPRECATION_MIGRATION_EXAMPLES.md       # Migration code examples
-├── UPSTREAM_SYNC_WORKFLOW.md               # Upstream sync
-├── ARCHITECTURE_AND_VALUE.md               # Architecture overview
-├── ASSESSMENT_MODULES_API.md              # Module API surface
-├── ASSESSMENT_MODULES_INTEGRATION.md      # Module integration
-├── ERROR_HANDLING_CONVENTIONS.md          # Error handling patterns
-├── BUG_DISCOVERY_REPORT_ISSUE_57.md       # Bug discovery from #57
-├── TEST_AUTOMATION_STRATEGY_ISSUE_57.md   # Test automation strategy
-├── TEST_AUTOMATION_IMPLEMENTATION_SUMMARY.md # Test automation impl
-├── DEPRECATION_REMOVAL_CHECKLIST.md       # Deprecation removal steps
-├── mcp_spec_11-2025.md                    # MCP spec rev 2025-11-25
-└── REAL_TIME_PROGRESS_OUTPUT.md            # Legacy progress
-```
-
----
-
-**Last Updated**: 2026-03-05
+**Last Updated**: 2026-03-22

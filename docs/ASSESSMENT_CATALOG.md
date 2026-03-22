@@ -1465,7 +1465,7 @@ cat /tmp/inspector-assessment-*.json | jq '.overallStatus'
 
 - [Testbed Setup Guide](TESTBED_SETUP_GUIDE.md) - A/B validation with vulnerable-mcp/hardened-mcp
 - [Security Patterns Catalog](SECURITY_PATTERNS_CATALOG.md) - 31 attack patterns
-- [Real-Time Progress Output](REAL_TIME_PROGRESS_OUTPUT.md) - CLI integration guide
+- [JSONL Events Reference](JSONL_EVENTS_REFERENCE.md) - CLI integration guide
 
 ---
 

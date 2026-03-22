@@ -33,7 +33,7 @@ For detailed implementation guides, see:
 - **[SCORING_ALGORITHM_GUIDE.md](SCORING_ALGORITHM_GUIDE.md)** - Module weights, thresholds, calculations
 - **[SECURITY_PATTERNS_CATALOG.md](SECURITY_PATTERNS_CATALOG.md)** - Comprehensive attack patterns and payloads
 - **[CLI_ASSESSMENT_GUIDE.md](CLI_ASSESSMENT_GUIDE.md)** - Three CLI modes comparison
-- **[JSONL_EVENTS_API.md](JSONL_EVENTS_API.md)** - Real-time event streaming reference
+- **[JSONL_EVENTS_REFERENCE.md](JSONL_EVENTS_REFERENCE.md)** - Real-time event streaming reference
 
 ---
 
@@ -334,5 +334,5 @@ You could audit servers with Claude alone, but you'd lose the **behavioral proof
 ## Related Documentation
 
 - [ASSESSMENT_CATALOG.md](ASSESSMENT_CATALOG.md) - Complete assessment module reference
-- [REAL_TIME_PROGRESS_OUTPUT.md](REAL_TIME_PROGRESS_OUTPUT.md) - JSONL event format
+- [JSONL_EVENTS_REFERENCE.md](JSONL_EVENTS_REFERENCE.md) - JSONL event format
 - [CLI_ASSESSMENT_GUIDE.md](CLI_ASSESSMENT_GUIDE.md) - CLI modes and options

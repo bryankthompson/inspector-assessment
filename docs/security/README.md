@@ -19,7 +19,6 @@ Security audit reports and assessments for MCP Inspector components.
 | ------------------------------------------------------------ | ----------------------------------------------- |
 | [Security Patterns Catalog](../SECURITY_PATTERNS_CATALOG.md) | 23 attack patterns, 118 payloads                |
 | [Testbed Setup Guide](../TESTBED_SETUP_GUIDE.md)             | A/B validation with vulnerable-mcp/hardened-mcp |
-| [DVMCP Usage Guide](../DVMCP_USAGE_GUIDE.md)                 | Damn Vulnerable MCP educational testbed         |
 
 ---
 

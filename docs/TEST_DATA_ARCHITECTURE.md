@@ -1,10 +1,6 @@
 # Test Data Architecture Guide
 
-> **Part of the Test Data Generation documentation series:**
->
-> - **Architecture** (this document) - Core architecture, field handlers, boundaries
-> - [Scenarios](TEST_DATA_SCENARIOS.md) - Scenario categories, tool-aware generation, examples
-> - [Extension](TEST_DATA_EXTENSION.md) - Adding handlers, debugging, integration
+> **See also:** [Scenarios](TEST_DATA_SCENARIOS.md) | [Extension](TEST_DATA_EXTENSION.md)
 
 ## Overview
 
