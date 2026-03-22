@@ -183,6 +183,12 @@ describe("configurationTypesSchemas", () => {
             value: "",
             is_session_item: true,
           },
+          MCP_TASK_TTL: {
+            label: "Task TTL",
+            description: "",
+            value: 60000,
+            is_session_item: false,
+          },
         };
         const result = InspectorConfigSchema.safeParse(minimalConfig);
         expect(result.success).toBe(true);

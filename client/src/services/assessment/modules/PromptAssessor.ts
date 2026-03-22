@@ -312,7 +312,9 @@ export class PromptAssessor extends BaseAssessor {
       const executionTime = Date.now() - startTime;
 
       // Check returned messages for unsafe content
-      const unsafeContent = this.checkMessagesForUnsafeContent(result.messages);
+      const unsafeContent = this.checkMessagesForUnsafeContent(
+        (result as any).messages,
+      );
 
       return { success: true, unsafeContent, executionTime };
     } catch (error) {
@@ -372,7 +374,7 @@ export class PromptAssessor extends BaseAssessor {
       );
 
       // Check if injection payload was reflected without sanitization
-      for (const message of result.messages) {
+      for (const message of (result as any).messages) {
         if (!message.content) continue;
 
         // Check if payload appears in output in a dangerous way

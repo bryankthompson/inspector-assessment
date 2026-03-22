@@ -729,7 +729,7 @@ export class DeveloperExperienceAssessor extends BaseAssessor<DeveloperExperienc
 
     // Check for declaration in package.json or manifest
     const declaration =
-      context.packageJson?.license || context.manifestJson?.license;
+      (context.packageJson as any)?.license || context.manifestJson?.license;
 
     if (foundFile) {
       return {

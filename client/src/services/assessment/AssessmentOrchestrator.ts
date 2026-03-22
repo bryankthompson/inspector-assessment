@@ -20,7 +20,7 @@ import {
 import { FunctionalityAssessor } from "./modules/FunctionalityAssessor";
 import { SecurityAssessor } from "./modules/SecurityAssessor";
 import { DocumentationAssessor } from "./modules/DocumentationAssessor";
-import { ErrorHandlingAssessor } from "./modules/ErrorHandlingAssessor";
+import { ErrorHandlingAssessor } from "./modules/ErrorHandlingAssessor.deprecated";
 import { UsabilityAssessor } from "./modules/UsabilityAssessor";
 
 // Extended assessment modules
@@ -118,6 +118,10 @@ export interface AssessmentContext {
     toolsWithExternalAPIDependency: Set<string>;
   };
 }
+
+// Type aliases for assessment modules that reference MCP resources/prompts
+export type MCPResource = NonNullable<AssessmentContext["resources"]>[number];
+export type MCPPrompt = NonNullable<AssessmentContext["prompts"]>[number];
 
 export class AssessmentOrchestrator {
   private config: AssessmentConfiguration;
