@@ -78,6 +78,7 @@
     "client/lib",
     "client/package.json",
     "server/build",
+    "server/static",
     "server/package.json",
     "cli/build",
     "cli/package.json"
@@ -135,6 +136,7 @@
     "acorn": "^8.14.0",
     "acorn-walk": "^8.3.4",
     "commander": "^14.0.2",
+    "concurrently": "^9.2.0",
     "node-fetch": "^3.3.2",
     "open": "^10.2.0",
     "p-limit": "^7.2.0",

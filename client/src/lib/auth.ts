@@ -153,16 +153,22 @@ export class InspectorOAuthClientProvider implements OAuthClientProvider {
   }
 
   get clientMetadata(): OAuthClientMetadata {
-    // Register both redirect URIs to support both normal and debug flows
-    return {
+    const metadata: OAuthClientMetadata = {
       redirect_uris: this.redirect_uris,
       token_endpoint_auth_method: "none",
       grant_types: ["authorization_code", "refresh_token"],
       response_types: ["code"],
-      client_name: "MCP Assessor",
-      client_uri: "https://github.com/triepod-ai/inspector-assessment",
-      scope: this.scope ?? "",
+      client_name: "MCP Inspector",
+      client_uri: "https://github.com/modelcontextprotocol/inspector",
     };
+
+    // Only include scope if it's defined and non-empty
+    // Per OAuth spec, omit the scope field entirely if no scopes are requested
+    if (this.scope) {
+      metadata.scope = this.scope;
+    }
+
+    return metadata;
   }
 
   state(): string | Promise<string> {

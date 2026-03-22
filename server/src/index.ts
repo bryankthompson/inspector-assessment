@@ -1,11 +1,9 @@
 #!/usr/bin/env node
 
 import cors from "cors";
-import rateLimit from "express-rate-limit";
 import { parseArgs } from "node:util";
 import { parse as shellParseArgs } from "shell-quote";
 import nodeFetch, { Headers as NodeHeaders } from "node-fetch";
-import fs from "node:fs";
 
 // Type-compatible wrappers for node-fetch to work with browser-style types
 const fetch = nodeFetch;
@@ -27,51 +25,23 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { Transport } from "@modelcontextprotocol/sdk/shared/transport.js";
 import express from "express";
+import rateLimit from "express-rate-limit";
 import { findActualExecutable } from "spawn-rx";
 import mcpProxy from "./mcpProxy.js";
-import { is401Error, getHttpHeaders, updateHeadersInPlace } from "./helpers.js";
 import { randomUUID, randomBytes, timingSafeEqual } from "node:crypto";
-import { z } from "zod";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
+import { readFileSync } from "fs";
 
 const DEFAULT_MCP_PROXY_LISTEN_PORT = "6277";
 
-// Schema for /assessment/save endpoint validation (Issue #87)
-const AssessmentSaveSchema = z.object({
-  serverName: z.string().min(1).max(255).optional().default("unknown"),
-  assessment: z.object({}).passthrough(), // Must be object, allow any properties
+const sandboxRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 /sandbox requests per windowMs
 });
-
-/**
- * Returns minimal environment variables for spawned MCP servers.
- * Using a curated set prevents unintended behavior from inherited env vars
- * (e.g., leaking API keys or triggering unexpected native module loading).
- *
- * @see https://github.com/triepod-ai/inspector-assessment/issues/211
- */
-function getMinimalEnv(): Record<string, string> {
-  const minimal: Record<string, string> = {};
-
-  // Essential system paths
-  if (process.env.PATH) minimal.PATH = process.env.PATH;
-  if (process.env.HOME) minimal.HOME = process.env.HOME;
-  if (process.env.TMPDIR) minimal.TMPDIR = process.env.TMPDIR;
-  if (process.env.TMP) minimal.TMP = process.env.TMP;
-  if (process.env.TEMP) minimal.TEMP = process.env.TEMP;
-
-  // Node.js environment
-  minimal.NODE_ENV = process.env.NODE_ENV || "production";
-
-  // Platform-specific essentials
-  if (process.env.USER) minimal.USER = process.env.USER;
-  if (process.env.SHELL) minimal.SHELL = process.env.SHELL;
-  if (process.env.LANG) minimal.LANG = process.env.LANG;
-
-  return minimal;
-}
 
 const defaultEnvironment = {
   ...getDefaultEnvironment(),
-  ...getMinimalEnv(),
   ...(process.env.MCP_ENV_VARS ? JSON.parse(process.env.MCP_ENV_VARS) : {}),
 };
 
@@ -86,42 +56,124 @@ const { values } = parseArgs({
   },
 });
 
+/**
+ * Helper function to detect 401 Unauthorized errors from various transport types.
+ * StreamableHTTPClientTransport throws a generic Error with "HTTP 401" in the message
+ * when there's no authProvider configured, while SSEClientTransport throws SseError.
+ */
+const is401Error = (error: unknown): boolean => {
+  if (error instanceof SseError && error.code === 401) return true;
+  if (error instanceof StreamableHTTPError && error.code === 401) return true;
+  if (
+    error instanceof Error &&
+    (error.message.includes("HTTP 401") || error.message.includes("(401)"))
+  )
+    return true;
+  return false;
+};
+
+// Function to get HTTP headers.
+const getHttpHeaders = (req: express.Request): Record<string, string> => {
+  const headers: Record<string, string> = {};
+
+  // Iterate over all headers in the request
+  for (const key in req.headers) {
+    const lowerKey = key.toLowerCase();
+
+    // Check if the header is one we want to forward
+    if (
+      lowerKey.startsWith("mcp-") ||
+      lowerKey === "authorization" ||
+      lowerKey === "last-event-id"
+    ) {
+      // Exclude the proxy's own authentication header and the Client <-> Proxy session ID header
+      if (lowerKey !== "x-mcp-proxy-auth" && lowerKey !== "mcp-session-id") {
+        const value = req.headers[key];
+
+        if (typeof value === "string") {
+          // If the value is a string, use it directly
+          headers[key] = value;
+        } else if (Array.isArray(value)) {
+          // If the value is an array, use the last element
+          const lastValue = value.at(-1);
+          if (lastValue !== undefined) {
+            headers[key] = lastValue;
+          }
+        }
+        // If value is undefined, it's skipped, which is correct.
+      }
+    }
+  }
+
+  // Handle the custom auth header separately. We expect `x-custom-auth-header`
+  // to be a string containing the name of the actual authentication header.
+  const customAuthHeaderName = req.headers["x-custom-auth-header"];
+  if (typeof customAuthHeaderName === "string") {
+    const lowerCaseHeaderName = customAuthHeaderName.toLowerCase();
+    const value = req.headers[lowerCaseHeaderName];
+
+    if (typeof value === "string") {
+      headers[customAuthHeaderName] = value;
+    } else if (Array.isArray(value)) {
+      // If the actual auth header was sent multiple times, use the last value.
+      const lastValue = value.at(-1);
+      if (lastValue !== undefined) {
+        headers[customAuthHeaderName] = lastValue;
+      }
+    }
+  }
+
+  // Handle multiple custom headers (new approach)
+  if (req.headers["x-custom-auth-headers"] !== undefined) {
+    try {
+      const customHeaderNames = JSON.parse(
+        req.headers["x-custom-auth-headers"] as string,
+      ) as string[];
+      if (Array.isArray(customHeaderNames)) {
+        customHeaderNames.forEach((headerName) => {
+          const lowerCaseHeaderName = headerName.toLowerCase();
+          if (req.headers[lowerCaseHeaderName] !== undefined) {
+            const value = req.headers[lowerCaseHeaderName];
+            headers[headerName] = Array.isArray(value)
+              ? value[value.length - 1]
+              : value;
+          }
+        });
+      }
+    } catch (error) {
+      console.warn("Failed to parse x-custom-auth-headers:", error);
+    }
+  }
+  return headers;
+};
+
+/**
+ * Updates a headers object in-place, preserving the original Accept header.
+ * This is necessary to ensure that transports holding a reference to the headers
+ * object see the updates.
+ * @param currentHeaders The headers object to update.
+ * @param newHeaders The new headers to apply.
+ */
+const updateHeadersInPlace = (
+  currentHeaders: Record<string, string>,
+  newHeaders: Record<string, string>,
+) => {
+  // Preserve the Accept header, which is set at transport creation and
+  // is not present in subsequent client requests.
+  const accept = currentHeaders["Accept"];
+
+  // Clear the old headers and apply the new ones.
+  Object.keys(currentHeaders).forEach((key) => delete currentHeaders[key]);
+  Object.assign(currentHeaders, newHeaders);
+
+  // Restore the Accept header.
+  if (accept) {
+    currentHeaders["Accept"] = accept;
+  }
+};
+
 const app = express();
 app.use(cors());
-
-// [SECURITY-ENHANCEMENT] - triepod-ai fork: Rate limiting to prevent DoS attacks
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
-  message: {
-    error: "Too many requests",
-    message: "Please try again later",
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-// Apply rate limiting to all MCP endpoints
-app.use("/mcp", limiter);
-app.use("/sse", limiter);
-app.use("/stdio", limiter);
-app.use("/message", limiter);
-
-// [SECURITY-ENHANCEMENT] - triepod-ai fork: Global body size limits to prevent memory exhaustion
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ limit: "10mb", extended: true }));
-
-// [SECURITY-ENHANCEMENT] - triepod-ai fork: Content Security Policy headers
-app.use((req, res, next) => {
-  res.setHeader(
-    "Content-Security-Policy",
-    "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' ws: wss:; frame-ancestors 'none'",
-  );
-  res.setHeader("X-Content-Type-Options", "nosniff");
-  res.setHeader("X-Frame-Options", "DENY");
-  next();
-});
-
 app.use((req, res, next) => {
   res.header("Access-Control-Expose-Headers", "mcp-session-id");
   next();
@@ -325,7 +377,7 @@ const createTransport = async (
     const command = (query.command as string).trim();
     const origArgs = shellParseArgs(query.args as string) as string[];
     const queryEnv = query.env ? JSON.parse(query.env as string) : {};
-    const env = { ...defaultEnvironment, ...queryEnv };
+    const env = { ...defaultEnvironment, ...process.env, ...queryEnv };
 
     const { cmd, args } = findActualExecutable(command, origArgs);
 
@@ -729,60 +781,6 @@ app.get("/health", (req, res) => {
   });
 });
 
-// Assessment result persistence endpoint
-app.post(
-  "/assessment/save",
-  originValidationMiddleware,
-  authMiddleware,
-  express.json({ limit: "10mb" }), // Allow large JSON payloads
-  async (req, res) => {
-    try {
-      // Validate request body (Issue #87)
-      const parseResult = AssessmentSaveSchema.safeParse(req.body);
-      if (!parseResult.success) {
-        return res.status(400).json({
-          success: false,
-          error: "Invalid request structure",
-          details: parseResult.error.format(),
-        });
-      }
-
-      const { serverName, assessment } = parseResult.data;
-
-      // Check assessment size (10MB limit)
-      const jsonStr = JSON.stringify(assessment, null, 2);
-      if (jsonStr.length > 10 * 1024 * 1024) {
-        return res.status(413).json({
-          success: false,
-          error: "Assessment too large (max 10MB)",
-        });
-      }
-
-      const sanitizedName = serverName.replace(/[^a-zA-Z0-9-_]/g, "_");
-      const filename = `/tmp/inspector-assessment-${sanitizedName}.json`;
-
-      // Delete old file if exists (cleanup)
-      if (fs.existsSync(filename)) {
-        fs.unlinkSync(filename);
-      }
-
-      // Save new assessment
-      fs.writeFileSync(filename, jsonStr);
-
-      res.json({
-        success: true,
-        path: filename,
-        message: `Assessment saved to ${filename}`,
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
-      });
-    }
-  },
-);
-
 app.get("/config", originValidationMiddleware, authMiddleware, (req, res) => {
   try {
     res.json({
@@ -798,16 +796,34 @@ app.get("/config", originValidationMiddleware, authMiddleware, (req, res) => {
   }
 });
 
+app.get(
+  "/sandbox",
+  sandboxRateLimiter as express.RequestHandler,
+  (req, res) => {
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = dirname(__filename);
+    const filePath = join(__dirname, "..", "static", "sandbox_proxy.html");
+    let sandboxHtml;
+
+    try {
+      sandboxHtml = readFileSync(filePath, "utf-8");
+    } catch (e) {
+      sandboxHtml = "MCP Apps sandbox not loaded: " + e;
+    }
+
+    res.set("Cache-Control", "no-cache, no-store, max-age=0");
+    res.send(sandboxHtml);
+  },
+);
+
 const PORT = parseInt(
   process.env.SERVER_PORT || DEFAULT_MCP_PROXY_LISTEN_PORT,
   10,
 );
 const HOST = process.env.HOST || "localhost";
 
-// Don't start server in test mode - allows supertest to manage the server
-const isTestMode = process.env.NODE_ENV === "test";
-const server = isTestMode ? null : app.listen(PORT, HOST);
-server?.on("listening", () => {
+const server = app.listen(PORT, HOST);
+server.on("listening", () => {
   console.log(`⚙️ Proxy server listening on ${HOST}:${PORT}`);
   if (!authDisabled) {
     console.log(
@@ -820,7 +836,7 @@ server?.on("listening", () => {
     );
   }
 });
-server?.on("error", (err) => {
+server.on("error", (err) => {
   if (err.message.includes(`EADDRINUSE`)) {
     console.error(`❌  Proxy Server PORT IS IN USE at port ${PORT} ❌ `);
   } else {
@@ -828,6 +844,3 @@ server?.on("error", (err) => {
   }
   process.exit(1);
 });
-
-// Export app and sessionToken for testing with supertest
-export { app, sessionToken };
