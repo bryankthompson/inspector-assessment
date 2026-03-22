@@ -44,7 +44,7 @@ PUBLISHING_GUIDE.md
 /security/
 
 # Test coverage reports
-coverage/
+**/coverage/
 
 inspector.code-workspace
 .env
