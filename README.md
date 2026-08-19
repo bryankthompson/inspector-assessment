@@ -46,7 +46,7 @@ This is a monorepo with three workspaces:
 If you want to explore the assessment framework:
 
 ```bash
-git clone https://github.com/triepod-ai/inspector-assessment.git
+git clone https://github.com/bryankthompson/inspector-assessment.git
 cd inspector-assessment
 npm install
 npm run build

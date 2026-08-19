@@ -7,11 +7,11 @@
   "contributors": [
     "Anthropic, PBC (original MCP Inspector)"
   ],
-  "homepage": "https://github.com/triepod-ai/inspector-assessment",
-  "bugs": "https://github.com/triepod-ai/inspector-assessment/issues",
+  "homepage": "https://github.com/bryankthompson/inspector-assessment",
+  "bugs": "https://github.com/bryankthompson/inspector-assessment/issues",
   "repository": {
     "type": "git",
-    "url": "https://github.com/triepod-ai/inspector-assessment.git"
+    "url": "https://github.com/bryankthompson/inspector-assessment.git"
   },
   "keywords": [
     "mcp",

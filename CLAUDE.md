@@ -388,7 +388,7 @@ See the npm publishing section above for detailed publishing documentation.
 
 - **Current Version**: v0.21.1
 - **Last Sync**: 2026-03-22 (105 commits from v0.18.0, synced to v0.21.1)
-- **Fork**: triepod-ai/inspector-assessment
+- **Fork**: bryankthompson/inspector-assessment
 - **Upstream**: modelcontextprotocol/inspector
 - See [PROJECT_STATUS.md](PROJECT_STATUS.md) for sync history
 - **Note**: Upstream created [AGENTS.md](AGENTS.md) for basic development guide
