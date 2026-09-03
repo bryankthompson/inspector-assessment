@@ -735,7 +735,7 @@ For your custom handler, create tests in `client/src/services/assessment/__tests
 
 ```bash
 # Create test file
-touch /home/bryan/inspector/client/src/services/assessment/__tests__/TestDataGenerator.myformat.test.ts
+touch ~/inspector/client/src/services/assessment/__tests__/TestDataGenerator.myformat.test.ts
 ```
 
 ```typescript

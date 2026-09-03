@@ -44,7 +44,7 @@ Complete these steps before attempting an upstream sync:
 ### 1. Verify Clean Working Directory
 
 ```bash
-cd /home/bryan/inspector
+cd ~/inspector
 git status
 ```
 
@@ -283,7 +283,7 @@ Please update UPSTREAM_SYNC.md manually with these values
 
 ### Step 5: Update Documentation
 
-Update `/home/bryan/inspector/UPSTREAM_SYNC.md` with new sync information:
+Update `~/inspector/UPSTREAM_SYNC.md` with new sync information:
 
 ```bash
 # Get the upstream HEAD commit
@@ -698,7 +698,7 @@ import {
 } from "./integrations/assessment";
 ```
 
-**Source File**: `/home/bryan/inspector/client/src/integrations/assessment.ts`
+**Source File**: `~/inspector/client/src/integrations/assessment.ts`
 
 **What This Does**:
 
@@ -1172,7 +1172,7 @@ Local:  1.0.0 → 1.5.0 → 1.10.0 → 1.15.0 → 1.20.0 → 1.21.4
 
 ### Sync Information File
 
-Update `/home/bryan/inspector/UPSTREAM_SYNC.md` after each sync:
+Update `~/inspector/UPSTREAM_SYNC.md` after each sync:
 
 ```markdown
 | Field                   | Value                                             |

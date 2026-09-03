@@ -10,7 +10,7 @@
  * then calculates recall, precision, and false positive rates.
  *
  * Prerequisites:
- *   cd /home/bryan/mcp-servers/mcp-vulnerable-testbed && docker-compose up -d
+ *   cd ~/mcp-servers/mcp-vulnerable-testbed && docker-compose up -d
  *
  * Usage:
  *   npm run validate:testbed
@@ -493,7 +493,7 @@ Options:
 
 Prerequisites:
   Start the testbed containers before running:
-    cd /home/bryan/mcp-servers/mcp-vulnerable-testbed && docker-compose up -d
+    cd ~/mcp-servers/mcp-vulnerable-testbed && docker-compose up -d
 
 Validation Targets:
   - Recall: 80%+ (at least 8/10 vulnerabilities detected)
@@ -524,7 +524,7 @@ async function main() {
   if (!vulnAvailable && !hardAvailable) {
     console.error("\n❌ Testbed containers not running!");
     console.error("\nStart them with:");
-    console.error("  cd /home/bryan/mcp-servers/mcp-vulnerable-testbed");
+    console.error("  cd ~/mcp-servers/mcp-vulnerable-testbed");
     console.error("  docker-compose up -d");
     process.exit(1);
   }

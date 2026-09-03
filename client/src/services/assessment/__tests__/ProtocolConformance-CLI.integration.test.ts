@@ -9,7 +9,7 @@
  *
  * IMPORTANT: These are INTEGRATION tests that require the testbed containers
  * to be running. Start them with:
- *   cd /home/bryan/mcp-servers/mcp-vulnerable-testbed && docker-compose up -d
+ *   cd ~/mcp-servers/mcp-vulnerable-testbed && docker-compose up -d
  *
  * @group integration
  * @group protocol
@@ -38,7 +38,7 @@ describeIntegration("ProtocolConformance - CLI serverInfo Integration", () => {
     if (!testbedAvailable.vulnerable && !testbedAvailable.hardened) {
       console.warn(
         "\n  Testbed containers not running. Start with:\n" +
-          "   cd /home/bryan/mcp-servers/mcp-vulnerable-testbed && docker-compose up -d\n",
+          "   cd ~/mcp-servers/mcp-vulnerable-testbed && docker-compose up -d\n",
       );
     }
   });

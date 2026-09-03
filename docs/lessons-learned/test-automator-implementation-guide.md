@@ -952,8 +952,8 @@ interface ToolIntegration {
 
 - **Primary Document**: [Type-Safe Testing Patterns](./type-safe-testing-patterns.md)
 - **Issue #186**: Type safety in test mocks
-- **testUtils.ts**: `/home/bryan/inspector/client/src/test/utils/testUtils.ts`
-- **Example Tests**: `/home/bryan/inspector/client/src/services/assessment/__tests__/`
+- **testUtils.ts**: `~/inspector/client/src/test/utils/testUtils.ts`
+- **Example Tests**: `~/inspector/client/src/services/assessment/__tests__/`
 
 ---
 

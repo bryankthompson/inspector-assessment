@@ -52,7 +52,7 @@ The MCP Inspector provides five distinct CLI modes for different workflows:
 
 **Purpose**: Development, testing, quick iterations
 **Command**: `npm run assess:full`
-**Location**: `/home/bryan/inspector/cli/src/assess-full.ts` (unified CLI)
+**Location**: `~/inspector/cli/src/assess-full.ts` (unified CLI)
 **Available**: When running from source code (requires `npm run build-cli` first)
 
 ```bash
@@ -2954,8 +2954,8 @@ mcp-assess-full --server my-server --config config.json \
 - **Architecture Detection**: [ARCHITECTURE_DETECTION_GUIDE.md](./ARCHITECTURE_DETECTION_GUIDE.md) - Server infrastructure analysis
 - **Behavior Inference**: [BEHAVIOR_INFERENCE_GUIDE.md](./BEHAVIOR_INFERENCE_GUIDE.md) - Tool behavior classification
 - **Source Code**:
-  - CLI binary: `/home/bryan/inspector/cli/src/assess-full.ts` (unified for local and npm)
-  - Legacy script: `/home/bryan/inspector/scripts/run-full-assessment.ts` (deprecated)
+  - CLI binary: `~/inspector/cli/src/assess-full.ts` (unified for local and npm)
+  - Legacy script: `~/inspector/scripts/run-full-assessment.ts` (deprecated)
 - **npm Package**: https://www.npmjs.com/package/@bryan-thompson/inspector-assessment
 
 ---

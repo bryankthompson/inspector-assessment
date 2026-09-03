@@ -2,7 +2,7 @@
 
 **Auditor:** Claude Code Security Auditor
 **Date:** 2025-12-27
-**Module:** `/home/bryan/inspector/client/src/services/assessment/modules/TemporalAssessor.ts`
+**Module:** `~/inspector/client/src/services/assessment/modules/TemporalAssessor.ts`
 **Assessment Version:** v1.15.0
 **Test Coverage:** 77/77 tests passing
 

@@ -534,5 +534,5 @@ console.log(`Expected: ${Math.round(total)}`);
 ## Related Documentation
 
 - [Assessment Catalog](ASSESSMENT_CATALOG.md) - Complete assessment module reference
-- [Audit Worker Architecture](/home/bryan/mcp-auditor/docs/AUDIT_WORKER_ARCHITECTURE.md) - Data flow
-- [Inspector/Auditor Data Contract](/home/bryan/mcp-auditor/docs/INSPECTOR_AUDITOR_DATA_CONTRACT.md) - Property mapping
+- [Audit Worker Architecture](~/mcp-auditor/docs/AUDIT_WORKER_ARCHITECTURE.md) - Data flow
+- [Inspector/Auditor Data Contract](~/mcp-auditor/docs/INSPECTOR_AUDITOR_DATA_CONTRACT.md) - Property mapping

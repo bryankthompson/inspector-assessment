@@ -881,7 +881,7 @@ The monolithic `client/src/lib/assessmentTypes.ts` file is now deprecated:
 - [Assessment Catalog](ASSESSMENT_CATALOG.md)
 - [Architecture & Value](ARCHITECTURE_AND_VALUE.md)
 
-**Project Path:** `/home/bryan/inspector/`
+**Project Path:** `~/inspector/`
 
 **Document Version:** 1.0.0
 

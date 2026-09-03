@@ -22,7 +22,7 @@ The A/B validation testbed proves behavior-based detection by testing **identica
 ## Testbed Location
 
 ```
-/home/bryan/mcp-servers/mcp-vulnerable-testbed/
+~/mcp-servers/mcp-vulnerable-testbed/
 ├── src/                    # Vulnerable server source
 │   ├── server.py          # Main MCP server (27,249 lines)
 │   ├── vulnerable_tools.py # 13 vulnerable tools
@@ -41,7 +41,7 @@ The A/B validation testbed proves behavior-based detection by testing **identica
 
 ```bash
 # 1. Start both servers
-cd /home/bryan/mcp-servers/mcp-vulnerable-testbed
+cd ~/mcp-servers/mcp-vulnerable-testbed
 docker compose up -d
 
 # 2. Verify servers are running
@@ -64,12 +64,12 @@ curl -s -X POST http://localhost:10901/mcp \
 
 ```bash
 # Terminal 1: Start vulnerable server
-cd /home/bryan/mcp-servers/mcp-vulnerable-testbed
+cd ~/mcp-servers/mcp-vulnerable-testbed
 source .venv/bin/activate
 SERVER_PORT=10900 TRANSPORT=http python3 src/server.py &
 
 # Terminal 2: Start hardened server
-cd /home/bryan/mcp-servers/mcp-vulnerable-testbed
+cd ~/mcp-servers/mcp-vulnerable-testbed
 source .venv/bin/activate
 SERVER_PORT=10901 TRANSPORT=http python3 src-hardened/server.py &
 ```
@@ -114,7 +114,7 @@ echo '{"transport": "http", "url": "http://localhost:10901/mcp"}' > /tmp/hardene
 ### Step 1: Run Against Vulnerable Server
 
 ```bash
-cd /home/bryan/inspector
+cd ~/inspector
 npm run assess -- --server vulnerable-mcp --config /tmp/vulnerable-mcp-config.json
 ```
 
