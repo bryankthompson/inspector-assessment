@@ -15,7 +15,7 @@
  * we verify that modules can be imported successfully and types are available
  * to TypeScript for compilation.
  *
- * @see https://github.com/triepod-ai/inspector-assessment/issues/164
+ * @see https://github.com/bryankthompson/inspector-assessment/issues/164
  */
 
 describe("Modularized Types (Issue #164)", () => {

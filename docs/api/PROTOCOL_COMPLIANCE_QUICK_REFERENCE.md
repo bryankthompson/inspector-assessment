@@ -494,4 +494,4 @@ import type {
 
 - **Tests**: `npm test -- ProtocolComplianceAssessor`
 - **Build**: `npm run build`
-- **Issues**: [GitHub Issues](https://github.com/triepod-ai/inspector-assessment/issues)
+- **Issues**: [GitHub Issues](https://github.com/bryankthompson/inspector-assessment/issues)

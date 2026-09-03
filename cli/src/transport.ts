@@ -19,7 +19,7 @@ export type TransportOptions = {
  * Returns minimal environment variables for spawned MCP servers.
  * Using a curated set prevents unintended behavior from inherited env vars.
  *
- * @see https://github.com/triepod-ai/inspector-assessment/issues/211
+ * @see https://github.com/bryankthompson/inspector-assessment/issues/211
  */
 function getMinimalEnv(): Record<string, string> {
   const minimal: Record<string, string> = {};

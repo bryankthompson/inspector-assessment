@@ -79,7 +79,7 @@ npm run assess:full -- --server my-server --sse http://localhost:9002/sse
 
 > **Migration Note**: The legacy script (`scripts/run-full-assessment.ts`) is deprecated
 > and available via `npm run assess:full:legacy` during the transition period.
-> See [GitHub Issue #19](https://github.com/triepod-ai/inspector-assessment/issues/19).
+> See [GitHub Issue #19](https://github.com/bryankthompson/inspector-assessment/issues/19).
 
 **Command Signature:**
 
@@ -811,7 +811,7 @@ First match wins. If no config found, error is thrown with attempted paths.
 ### Environment Variable Filtering
 
 **Version**: 1.43.2+
-**Issue**: [#211](https://github.com/triepod-ai/inspector-assessment/issues/211)
+**Issue**: [#211](https://github.com/bryankthompson/inspector-assessment/issues/211)
 
 When spawning MCP servers via STDIO transport, the inspector passes a **minimal curated set** of environment variables to prevent unintended behavior (e.g., unexpected native module loading).
 
@@ -1158,7 +1158,7 @@ echo "All checks passed!"
 ## Tiered Output for LLM Consumption
 
 **Version**: 1.35.0+
-**Issue**: [#136](https://github.com/triepod-ai/inspector-assessment/issues/136)
+**Issue**: [#136](https://github.com/bryankthompson/inspector-assessment/issues/136)
 
 Assessment outputs can exceed LLM context windows for real-world MCP servers:
 

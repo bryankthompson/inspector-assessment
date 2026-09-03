@@ -5,8 +5,8 @@
  * These tests validate the type safety improvements made to resolve
  * pre-existing build errors.
  *
- * @see https://github.com/triepod-ai/inspector-assessment/issues/33
- * @see https://github.com/triepod-ai/inspector-assessment/issues/37
+ * @see https://github.com/bryankthompson/inspector-assessment/issues/33
+ * @see https://github.com/bryankthompson/inspector-assessment/issues/37
  */
 
 import { jest, describe, it, expect, afterEach } from "@jest/globals";

@@ -29,7 +29,7 @@ console.warn(
     "⚠️  DEPRECATION WARNING: scripts/run-full-assessment.ts is deprecated.\n" +
     "   Use `npm run assess:full` instead for the full-featured CLI.\n" +
     "   This legacy script will be removed in v2.0.0.\n" +
-    "   See: https://github.com/triepod-ai/inspector-assessment/issues/19\x1b[0m\n",
+    "   See: https://github.com/bryankthompson/inspector-assessment/issues/19\x1b[0m\n",
 );
 
 import * as fs from "fs";

@@ -2005,7 +2005,7 @@ if (
 ### Step 1: Define Pattern in `securityPatterns/`
 
 > **Note**: As of v1.37.0, security patterns are modularized by attack category.
-> See [Issue #163](https://github.com/triepod-ai/inspector-assessment/issues/163) for details.
+> See [Issue #163](https://github.com/bryankthompson/inspector-assessment/issues/163) for details.
 > Import from `@/lib/securityPatterns` (same path, now modular internally).
 
 ```typescript
@@ -2175,7 +2175,7 @@ All safe tools tested with **100+ patterns each** (31 attack types × ~4.8 paylo
 ## References
 
 - **SecurityAssessor Implementation**: [client/src/services/assessment/modules/SecurityAssessor.ts](../client/src/services/assessment/modules/SecurityAssessor.ts)
-- **Security Patterns Library**: [client/src/lib/securityPatterns/](../client/src/lib/securityPatterns/) (modularized in v1.37.0, [Issue #163](https://github.com/triepod-ai/inspector-assessment/issues/163))
+- **Security Patterns Library**: [client/src/lib/securityPatterns/](../client/src/lib/securityPatterns/) (modularized in v1.37.0, [Issue #163](https://github.com/bryankthompson/inspector-assessment/issues/163))
 - **Tool Classifier**: [client/src/services/assessment/ToolClassifier.ts](../client/src/services/assessment/ToolClassifier.ts)
 - **Testbed Validation**: [docs/mcp_vulnerability_testbed.md](mcp_vulnerability_testbed.md)
 - **Assessment Catalog**: [docs/ASSESSMENT_CATALOG.md](ASSESSMENT_CATALOG.md)

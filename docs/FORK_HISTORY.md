@@ -11,7 +11,7 @@ MCP Inspector Assessment is an enhanced fork of [Anthropic's MCP Inspector](http
 | Repository      | URL                                                                                                        |
 | --------------- | ---------------------------------------------------------------------------------------------------------- |
 | **Original**    | https://github.com/modelcontextprotocol/inspector                                                          |
-| **This Fork**   | https://github.com/triepod-ai/inspector-assessment                                                         |
+| **This Fork**   | https://github.com/bryankthompson/inspector-assessment                                                         |
 | **npm Package** | [@bryan-thompson/inspector-assessment](https://www.npmjs.com/package/@bryan-thompson/inspector-assessment) |
 
 **Important**: This is a published fork with assessment enhancements. If you want the official Anthropic inspector without assessment features, use:

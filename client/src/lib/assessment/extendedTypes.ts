@@ -17,7 +17,7 @@
  * import { AUPCategory, ToolAnnotationResult, ... } from '@/lib/assessment';
  *
  * @module assessment/extendedTypes
- * @see https://github.com/triepod-ai/inspector-assessment/issues/164
+ * @see https://github.com/bryankthompson/inspector-assessment/issues/164
  */
 
 // Re-export all types for backward compatibility

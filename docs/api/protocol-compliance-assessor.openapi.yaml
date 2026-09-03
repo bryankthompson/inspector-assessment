@@ -5,7 +5,7 @@ info:
   description: Unified MCP protocol compliance assessment module combining specification and conformance validation
   license:
     name: MIT
-    url: https://github.com/triepod-ai/inspector-assessment/blob/main/LICENSE
+    url: https://github.com/bryankthompson/inspector-assessment/blob/main/LICENSE
 
 paths:
   /assess:

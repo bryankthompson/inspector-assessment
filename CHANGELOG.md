@@ -1482,6 +1482,6 @@ If this package is adopted by Anthropic, it can be published to the official `@m
 
 ## Links
 
-- [GitHub Repository](https://github.com/triepod-ai/inspector-assessment)
+- [GitHub Repository](https://github.com/bryankthompson/inspector-assessment)
 - [Original MCP Inspector](https://github.com/modelcontextprotocol/inspector)
 - [npm Package](https://www.npmjs.com/package/@bryan-thompson/inspector-assessment)

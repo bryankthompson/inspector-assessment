@@ -631,7 +631,7 @@ The unified assessor performs more checks than either old module individually:
 
 ### GitHub
 
-- [Upgrade Issue](https://github.com/triepod-ai/inspector-assessment/issues/25)
+- [Upgrade Issue](https://github.com/bryankthompson/inspector-assessment/issues/25)
 - [Project Status](../../PROJECT_STATUS.md)
 
 ---

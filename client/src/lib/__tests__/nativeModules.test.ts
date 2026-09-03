@@ -4,7 +4,7 @@
  * Tests for the native module detection utilities that identify
  * problematic native dependencies in package.json.
  *
- * @see https://github.com/triepod-ai/inspector-assessment/issues/212
+ * @see https://github.com/bryankthompson/inspector-assessment/issues/212
  */
 
 import { describe, it, expect } from "@jest/globals";

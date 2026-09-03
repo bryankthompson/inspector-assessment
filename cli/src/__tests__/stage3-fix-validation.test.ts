@@ -4,7 +4,7 @@
  * Tests for Issue #137 Stage 3 fixes (code review and corrections).
  * Validates that FIX-001 (stageBVerbose schema) is correctly implemented.
  *
- * @see https://github.com/triepod-ai/inspector-assessment/issues/137
+ * @see https://github.com/bryankthompson/inspector-assessment/issues/137
  */
 
 import { jest, describe, it, expect, afterEach } from "@jest/globals";

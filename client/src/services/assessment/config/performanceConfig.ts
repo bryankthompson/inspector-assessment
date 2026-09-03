@@ -7,7 +7,7 @@
  *
  * @public
  * @module assessment/performance
- * @see https://github.com/triepod-ai/inspector-assessment/issues/37
+ * @see https://github.com/bryankthompson/inspector-assessment/issues/37
  */
 
 import * as fs from "fs";
@@ -78,7 +78,7 @@ export interface PerformanceConfig {
    * Maximum retry attempts for transient errors in security tests.
    * Payload-level retry with exponential backoff for connection errors.
    * @default 2
-   * @see https://github.com/triepod-ai/inspector-assessment/issues/157
+   * @see https://github.com/bryankthompson/inspector-assessment/issues/157
    */
   securityRetryMaxAttempts: number;
 
@@ -86,7 +86,7 @@ export interface PerformanceConfig {
    * Initial backoff delay in milliseconds for security test retries.
    * Uses exponential backoff: delay * 2^attempt (100ms → 200ms → 400ms)
    * @default 100
-   * @see https://github.com/triepod-ai/inspector-assessment/issues/157
+   * @see https://github.com/bryankthompson/inspector-assessment/issues/157
    */
   securityRetryBackoffMs: number;
 }

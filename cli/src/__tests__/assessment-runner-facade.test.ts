@@ -4,7 +4,7 @@
  * Verifies that the facade pattern maintains backward compatibility
  * after the modularization in Issue #94.
  *
- * @see https://github.com/triepod-ai/inspector-assessment/issues/96
+ * @see https://github.com/bryankthompson/inspector-assessment/issues/96
  */
 
 import { jest, describe, it, expect, afterEach } from "@jest/globals";

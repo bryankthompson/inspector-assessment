@@ -11,7 +11,7 @@
  * - Global modification (EventEmitter.defaultMaxListeners = 300) is an anti-pattern
  * - This module provides scoped configuration that restores original values
  *
- * @see https://github.com/triepod-ai/inspector-assessment/issues/33
+ * @see https://github.com/bryankthompson/inspector-assessment/issues/33
  */
 
 import { EventEmitter } from "events";

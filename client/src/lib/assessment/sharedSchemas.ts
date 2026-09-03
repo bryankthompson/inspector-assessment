@@ -6,7 +6,7 @@
  *
  * @public
  * @module assessment/sharedSchemas
- * @see https://github.com/triepod-ai/inspector-assessment/issues/114
+ * @see https://github.com/bryankthompson/inspector-assessment/issues/114
  */
 
 import { z } from "zod";

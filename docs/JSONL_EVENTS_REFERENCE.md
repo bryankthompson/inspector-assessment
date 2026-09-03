@@ -1515,7 +1515,7 @@ interface AssessmentCompleteEvent {
 
 **Purpose**: Warns about native modules that may cause hangs or Gatekeeper blocks during server startup
 
-**Issue**: [#212](https://github.com/triepod-ai/inspector-assessment/issues/212)
+**Issue**: [#212](https://github.com/bryankthompson/inspector-assessment/issues/212)
 
 ```json
 {

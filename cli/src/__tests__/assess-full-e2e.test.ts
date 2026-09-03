@@ -12,7 +12,7 @@
  * gracefully when servers are unavailable, allowing CI to pass without
  * external dependencies.
  *
- * @see https://github.com/triepod-ai/inspector-assessment/issues/97
+ * @see https://github.com/bryankthompson/inspector-assessment/issues/97
  */
 
 import {

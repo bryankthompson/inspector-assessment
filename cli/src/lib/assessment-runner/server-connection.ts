@@ -18,7 +18,7 @@ import type { ServerConfig } from "../cli-parser.js";
  * Using a curated set prevents unintended behavior from inherited env vars
  * (e.g., native module loading triggered by unexpected env conditions).
  *
- * @see https://github.com/triepod-ai/inspector-assessment/issues/211
+ * @see https://github.com/bryankthompson/inspector-assessment/issues/211
  */
 function getMinimalEnv(): Record<string, string> {
   const minimal: Record<string, string> = {};

@@ -385,7 +385,7 @@ result.recommendations.forEach((rec, i) => {
 
 ### Reporting Issues
 
-- GitHub: [triepod-ai/inspector-assessment/issues](https://github.com/triepod-ai/inspector-assessment/issues)
+- GitHub: [bryankthompson/inspector-assessment/issues](https://github.com/bryankthompson/inspector-assessment/issues)
 - Include:
   - MCP server version
   - Test configuration
@@ -405,7 +405,7 @@ result.recommendations.forEach((rec, i) => {
 
 **Last Updated**: 2025-01-07
 **Package**: @bryan-thompson/inspector-assessment
-**Repository**: https://github.com/triepod-ai/inspector-assessment
+**Repository**: https://github.com/bryankthompson/inspector-assessment
 **License**: MIT
 
 ---

@@ -193,7 +193,7 @@ import type { TemporalAssessment } from "@/lib/assessment/temporalSecurityTypes"
 
 **Import when you need:** Extended assessment types, advanced compliance checks, MCP directory policy validation
 
-**Migration Path:** See [Issue #164](https://github.com/triepod-ai/inspector-assessment/issues/164) for detailed migration guidance
+**Migration Path:** See [Issue #164](https://github.com/bryankthompson/inspector-assessment/issues/164) for detailed migration guidance
 
 #### 5. **progressTypes.ts** - Progress Event Types
 

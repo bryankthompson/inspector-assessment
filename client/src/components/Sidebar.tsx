@@ -893,7 +893,7 @@ const Sidebar = ({
               asChild
             >
               <a
-                href="https://github.com/triepod-ai/inspector-assessment"
+                href="https://github.com/bryankthompson/inspector-assessment"
                 target="_blank"
                 rel="noopener noreferrer"
               >

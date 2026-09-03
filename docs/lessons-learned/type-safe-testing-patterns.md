@@ -911,7 +911,7 @@ const scenario = TestScenario.forTool("calculator")
 
 ## References
 
-- **Issue #186**: [GitHub Issue - Type safety in test mocks](https://github.com/triepod-ai/inspector-assessment/issues/186)
+- **Issue #186**: [GitHub Issue - Type safety in test mocks](https://github.com/bryankthompson/inspector-assessment/issues/186)
 - **testUtils.ts**: `~/inspector/client/src/test/utils/testUtils.ts`
 - **MCP SDK Types**: `@modelcontextprotocol/sdk/types.js`
 - **TypeScript Handbook**: [Type Assertions](https://www.typescriptlang.org/docs/handbook/2/everyday-types.html#type-assertions)

@@ -56,7 +56,7 @@ export class ErrorClassifier {
    * Transient errors (ECONNREFUSED, ETIMEDOUT, etc.) may resolve on retry.
    * Permanent errors (unknown tool, unauthorized) will not.
    *
-   * @see https://github.com/triepod-ai/inspector-assessment/issues/157
+   * @see https://github.com/bryankthompson/inspector-assessment/issues/157
    */
   isTransientError(response: CompatibilityCallToolResult): boolean {
     const text = this.extractResponseContent(response).toLowerCase();
@@ -66,7 +66,7 @@ export class ErrorClassifier {
   /**
    * Check if caught exception indicates transient error worth retrying.
    *
-   * @see https://github.com/triepod-ai/inspector-assessment/issues/157
+   * @see https://github.com/bryankthompson/inspector-assessment/issues/157
    */
   isTransientErrorFromException(error: unknown): boolean {
     if (error instanceof Error) {

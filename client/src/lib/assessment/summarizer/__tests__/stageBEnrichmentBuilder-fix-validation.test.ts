@@ -5,7 +5,7 @@
  * Validates that the location and context fields consistently prioritize
  * evidence over response.
  *
- * @see https://github.com/triepod-ai/inspector-assessment/issues/137
+ * @see https://github.com/bryankthompson/inspector-assessment/issues/137
  */
 
 import {

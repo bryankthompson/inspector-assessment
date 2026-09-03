@@ -5,7 +5,7 @@
  * Validates that AssessmentSummarizer correctly populates stageBEnrichment
  * field when stageBVerbose is enabled.
  *
- * @see https://github.com/triepod-ai/inspector-assessment/issues/137
+ * @see https://github.com/bryankthompson/inspector-assessment/issues/137
  */
 
 import { AssessmentSummarizer } from "../AssessmentSummarizer";

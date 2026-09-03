@@ -447,7 +447,7 @@ export const ERROR_CLASSIFICATION_PATTERNS = {
  * These indicate temporary network/server issues that may resolve.
  * Used by: isTransientError(), isTransientErrorFromException()
  *
- * @see https://github.com/triepod-ai/inspector-assessment/issues/157
+ * @see https://github.com/bryankthompson/inspector-assessment/issues/157
  */
 export const TRANSIENT_ERROR_PATTERNS = [
   /ECONNREFUSED/i, // Server temporarily down
@@ -466,7 +466,7 @@ export const TRANSIENT_ERROR_PATTERNS = [
  * These indicate issues that will not resolve with retry.
  * Used by: isTransientError() to short-circuit retry logic
  *
- * @see https://github.com/triepod-ai/inspector-assessment/issues/157
+ * @see https://github.com/bryankthompson/inspector-assessment/issues/157
  */
 export const PERMANENT_ERROR_PATTERNS = [
   /unknown tool:/i, // Tool doesn't exist

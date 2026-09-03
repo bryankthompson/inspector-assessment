@@ -9,7 +9,7 @@
  * or require platform-specific compilation.
  *
  * @module cli/lib/assessment-runner/native-module-detector
- * @see https://github.com/triepod-ai/inspector-assessment/issues/212
+ * @see https://github.com/bryankthompson/inspector-assessment/issues/212
  */
 
 import {

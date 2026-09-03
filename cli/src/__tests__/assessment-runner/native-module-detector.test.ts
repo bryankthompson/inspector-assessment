@@ -4,7 +4,7 @@
  * Tests for the pre-flight native module detection that warns about
  * potential issues before MCP server connection.
  *
- * @see https://github.com/triepod-ai/inspector-assessment/issues/212
+ * @see https://github.com/bryankthompson/inspector-assessment/issues/212
  */
 
 import {

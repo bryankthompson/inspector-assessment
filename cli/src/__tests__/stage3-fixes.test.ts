@@ -4,7 +4,7 @@
  * Tests for Issue #134 code review fixes to ensure they don't regress.
  * These tests validate schema validation and JSONL event emission.
  *
- * @see https://github.com/triepod-ai/inspector-assessment/issues/134
+ * @see https://github.com/bryankthompson/inspector-assessment/issues/134
  */
 
 import {

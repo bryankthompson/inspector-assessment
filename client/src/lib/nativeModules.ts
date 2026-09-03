@@ -9,7 +9,7 @@
  * When these modules are detected in package.json, warnings are emitted
  * before server connection to help diagnose potential hang/timeout issues.
  *
- * @see https://github.com/triepod-ai/inspector-assessment/issues/212
+ * @see https://github.com/bryankthompson/inspector-assessment/issues/212
  */
 
 /**
